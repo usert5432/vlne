@@ -2,7 +2,7 @@
 A collection of functions to setup keras training.
 """
 
-import keras
+import tensorflow.keras as keras
 
 from lstm_ee.keras.callbacks import TrainTime
 from lstm_ee.keras.models    import (

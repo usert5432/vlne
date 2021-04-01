@@ -2,7 +2,7 @@
 Functions to construct models that work only on slice level inputs.
 """
 
-from keras.models import Model
+from tensorflow.keras.models import Model
 from .funcs import (get_inputs, get_outputs)
 
 def model_slice_linear(

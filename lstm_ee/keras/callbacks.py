@@ -1,7 +1,7 @@
 """Custom `keras` callbacks"""
 
 import time
-from keras.callbacks import Callback
+from tensorflow.keras.callbacks import Callback
 
 class TrainTime(Callback):
     """Callback that saves cumulative training time for each epoch in log."""

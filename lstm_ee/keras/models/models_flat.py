@@ -2,8 +2,8 @@
 Functions to construct models that work on flattened prong arrays.
 """
 
-from keras.layers import Concatenate, Flatten
-from keras.models import Model
+from tensorflow.keras.layers import Concatenate, Flatten
+from tensorflow.keras.models import Model
 
 from .funcs import modify_layer, add_hidden_layers, get_inputs, get_outputs
 

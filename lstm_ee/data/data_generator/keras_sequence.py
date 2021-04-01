@@ -2,7 +2,7 @@
 Definition of a decorator that makes IDataGenerator descendant of `Sequence`.
 """
 
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 from .idata_decorator import IDataDecorator
 
 class KerasSequence(IDataDecorator, Sequence):

@@ -1,6 +1,6 @@
 """Functions to save/load trained networks."""
 
-import keras
+import tensorflow
 from lstm_ee.args import Args
 
 def load_model(savedir, compile = False):
@@ -8,7 +8,7 @@ def load_model(savedir, compile = False):
     # pylint: disable=redefined-builtin
     args = Args.load(savedir = savedir)
 
-    model = keras.models.load_model(
+    model = tensorflow.keras.models.load_model(
         "%s/model.h5" % (savedir), compile = compile
     )
 

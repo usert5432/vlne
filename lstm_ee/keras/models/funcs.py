@@ -1,6 +1,6 @@
 """Functions to construct blocks of layers for `lstm_ee`"""
 
-from keras.layers import (
+from tensorflow.keras.layers import (
     Activation, Add, BatchNormalization, Bidirectional,
     Dense, Dropout, Input, LSTM, Masking, TimeDistributed
 )

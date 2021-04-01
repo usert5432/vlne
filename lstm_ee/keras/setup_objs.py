@@ -1,6 +1,6 @@
 """Functions to register custom `keras` objects to allow their serialization"""
 
-from keras.utils.generic_utils import get_custom_objects
+from tensorflow.keras.utils import get_custom_objects
 from .losses import (
     cl_mean_relative_error, cl_ms_relative_error,
     relative_error_huber, error_huber

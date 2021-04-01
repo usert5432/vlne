@@ -2,8 +2,8 @@
 Functions to construct models that use LSTM layers to process prong inputs.
 """
 
-from keras.layers import LSTM, Concatenate
-from keras.models import Model
+from tensorflow.keras.layers import LSTM, Concatenate
+from tensorflow.keras.models import Model
 
 from lstm_ee.consts import DEF_MASK
 
