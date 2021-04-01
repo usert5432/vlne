@@ -7,7 +7,8 @@ import tensorflow.keras as keras
 from lstm_ee.keras.callbacks import TrainTime
 from lstm_ee.keras.models    import (
     flattened_model, model_lstm_v1, model_lstm_v2, model_lstm_v3,
-    model_slice_linear, model_lstm_v3_stack
+    model_slice_linear, model_lstm_v3_stack,
+    model_trans_v1
 )
 
 def get_optimizer(optimizer):
@@ -66,9 +67,9 @@ def get_default_callbacks(args):
 
     cb_checkpoint = keras.callbacks.ModelCheckpoint(
         "%s/model.h5" % args.savedir,
-        monitor = 'val_loss',
-        verbose = 0,
-        save_best_only = args.save_best
+        monitor           = 'val_loss',
+        verbose           = 0,
+        save_best_only    = args.save_best,
     )
 
     cb_logger     = keras.callbacks.CSVLogger("%s/log.csv" % args.savedir)
@@ -135,6 +136,8 @@ def select_model(args):
         return model_slice_linear(**kwargs)
     if name == 'flattened':
         return flattened_model(**kwargs)
+    if name == 'trans_v1':
+        return model_trans_v1(**kwargs)
     else:
         raise ValueError("Unknown model name: %s" % (args.model))
 
