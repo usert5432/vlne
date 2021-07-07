@@ -78,7 +78,7 @@ def train_test_split(data_loader, test_size):
         DataSlice(data_loader, indices[n_train:]),
     ]
 
-def construct_data_loader(path, seed, test_size):
+def construct_data_loader(path, seed, test_size, shuffle):
     """Load dataset to DataLoader, shuffle it and split into train/test parts.
 
     Parameters
@@ -90,6 +90,8 @@ def construct_data_loader(path, seed, test_size):
     test_size : int or float or None
         Fraction of the dataset that will go to the test sample.
         C.f. `train_test_split` for the detailed description.
+    shuffle : bool
+        Whether to shuffle dataset.
 
     Returns
     -------
@@ -102,7 +104,11 @@ def construct_data_loader(path, seed, test_size):
     """
 
     data_loader = guess_data_loader(path)
-    data_loader = DataShuffle(data_loader, seed)
+
+    if shuffle:
+        data_loader = DataShuffle(data_loader, seed)
+    else:
+        LOGGER.warning("Not shuffling the dataset. Make sure it is shuffled.")
 
     return train_test_split(data_loader, test_size)
 
@@ -349,6 +355,7 @@ def create_basic_data_generators(
     batch_size         = 1024,
     max_prongs         = None,
     seed               = None,
+    shuffle            = True,
     test_size          = 0.2,
     vars_input_slice   = None,
     vars_input_png3d   = None,
@@ -373,6 +380,8 @@ def create_basic_data_generators(
         be truncated by `max_prongs`. Default: None.
     seed : int or None
         Seed that will be used to shuffle data.
+    shuffle : bool
+        Whether to shuffle dataset.
     test_size : int or float or None
         Amount of samples from `data_loader` that will go to the test sample.
         C.f. `train_test_split`.
@@ -405,7 +414,7 @@ def create_basic_data_generators(
 
     LOGGER.info("Loading %s dataset from %s.", dataset, datadir)
     path = os.path.join(datadir, dataset)
-    data_loader_list = construct_data_loader(path, seed, test_size)
+    data_loader_list = construct_data_loader(path, seed, test_size, shuffle)
 
     LOGGER.info(
           "Creating data generators with:\n"
@@ -445,6 +454,7 @@ def create_data_generators(
     noise              = None,
     prong_sorters      = None,
     seed               = None,
+    shuffle            = True,
     test_size          = 0.2,
     weights            = None,
     vars_input_slice   = None,
@@ -477,6 +487,8 @@ def create_data_generators(
         Prong sorting specifications. C.f. `add_prong_sorters`.
     seed : int or None
         Seed that will be used to shuffle data.
+    shuffle : bool
+        Whether to shuffle dataset.
     test_size : int or float or None
         Amount of samples from `data_loader` that will go to the test sample.
         C.f. `train_test_split`.
@@ -523,7 +535,7 @@ def create_data_generators(
 
 
     dgen_list = create_basic_data_generators(
-        datadir, dataset, batch_size, max_prongs, seed, test_size,
+        datadir, dataset, batch_size, max_prongs, seed, shuffle, test_size,
         vars_input_slice, vars_input_png3d, vars_input_png2d,
         var_target_total, var_target_primary, disk_cache
     )
@@ -556,6 +568,7 @@ def load_data(args):
         noise              = args.noise,
         prong_sorters      = args.prong_sorters,
         seed               = args.seed,
+        shuffle            = args.shuffle_data,
         test_size          = args.test_size,
         weights            = args.weights,
         vars_input_slice   = args.vars_input_slice,

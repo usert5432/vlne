@@ -65,6 +65,8 @@ class Config:
           - prong sorting in case of randomized prong order
           - noise applied to the data (if any)
           - training itself
+    shuffle_data : bool
+        Whether to shuffle dataset.
     steps_per_epoch : int or None, optional
         Number of batches to use per training epoch. If None then all available
         batches will be used in a single epoch. Default: None.
@@ -115,6 +117,7 @@ class Config:
         'regularizer',
         'schedule',
         'seed',
+        'shuffle_data',
         'steps_per_epoch',
         'test_size',
         'vars_input_slice',
@@ -125,6 +128,13 @@ class Config:
         'weights',
     )
 
+    def _set_defaults(self):
+        """Set default values of parameters for backward compatibility"""
+
+        # pylint: disable=access-member-before-definition
+        if self.shuffle_data is None:
+            self.shuffle_data = True
+
     def __init__(self, **kwargs):
 
         for k in self.__slots__:
@@ -133,6 +143,8 @@ class Config:
         for k,v in kwargs.items():
             if k in self.__slots__:
                 setattr(self, k, v)
+
+        self._set_defaults()
 
     def save(self, savedir):
         """Save configuration to `savedir`/config.json"""
