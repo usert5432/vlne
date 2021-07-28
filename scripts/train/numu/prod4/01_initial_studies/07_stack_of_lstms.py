@@ -36,7 +36,7 @@ config = join_dicts(
         'model'        : {
             'name'   : 'lstm_v3_stack',
             'kwargs' : {
-                'batchnorm'   : True,
+                'norm'        : 'batch',
                 'layers_pre'  : [],
                 'layers_post' : [],
                 'lstm3d_spec' : [ (32, 'forward') ],

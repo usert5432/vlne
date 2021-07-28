@@ -36,7 +36,7 @@ config = join_dicts(
         'model'        : {
             'name'   : 'lstm_v1',
             'kwargs' : {
-                'batchnorm'  : False,
+                'norm'       : None,
                 'lstm_units' : 32,
             },
         },

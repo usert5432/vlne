@@ -36,7 +36,7 @@ config = join_dicts(
         'model'        : {
             'name'   : 'lstm_v1',
             'kwargs' : {
-                'batchnorm'  : True,
+                'norm'       : 'batch',
                 'lstm_units' : 32,
             },
         },
@@ -76,25 +76,25 @@ config = join_dicts(
 search_space = [
     {
         'weights' : 'weight',
-        'model'   : { 'kwargs' : { 'batchnorm'  : False, }, },
+        'model'   : { 'kwargs' : { 'norm'       : None, }, },
     },
     {
         'weights' : 'weight',
-        'model'   : { 'kwargs' : { 'batchnorm'  : True, }, },
+        'model'   : { 'kwargs' : { 'norm'       : 'batch', }, },
     },
     {
         'weights' : {
             'name'   : 'flat',
             'kwargs' : { 'bins' : 50, 'range' : (0, 5) },
         },
-        'model'   : { 'kwargs' : { 'batchnorm'  : False, }, },
+        'model'   : { 'kwargs' : { 'norm'       : None, }, },
     },
     {
         'weights' : {
             'name'   : 'flat',
             'kwargs' : { 'bins' : 50, 'range' : (0, 5) },
         },
-        'model'   : { 'kwargs' : { 'batchnorm'  : True, }, },
+        'model'   : { 'kwargs' : { 'norm'       : 'batch', }, },
     },
 ]
 
