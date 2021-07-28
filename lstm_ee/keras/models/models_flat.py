@@ -10,7 +10,7 @@ from .funcs import modify_layer, add_hidden_layers, get_inputs, get_outputs
 def flattened_model(
     max_prongs         = 5,
     reg                = None,
-    batchnorm          = False,
+    norm               = None,
     dropout            = None,
     layer_sizes        = None,
     vars_input_slice   = None,
@@ -35,15 +35,13 @@ def flattened_model(
     input_png_flat = Flatten()(input_png)
 
     layer_merged = Concatenate()([ input_png_flat, input_slc ])
-    layer_merged = modify_layer(
-        layer_merged, 'layer_merged', batchnorm
-    )
+    layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
 
     layer_hidden = add_hidden_layers(
         layer_merged,
         layer_sizes,
         "hidden",
-        batchnorm,
+        norm,
         dropout,
         activation         = 'relu',
         kernel_regularizer = reg,

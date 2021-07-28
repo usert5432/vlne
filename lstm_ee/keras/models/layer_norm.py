@@ -1,11 +1,24 @@
 from keras import backend as K
-from keras.layer import Layer
+from keras.engine.base_layer import Layer, InputSpec
 
 class SimpleNorm(Layer):
+    """Layer that standartizes data by using moving mean/variance
+        
+    Parameters
+    ----------
+    momentum : float
+        Momentum for the moving mean and the moving variance.
+        Default: 0.99
+    epsilon : float
+        Number that is added to the denominator to prevent division by zero.
+    """
 
-    def __init__(self, momentum = 0.99, epsilon = 1e-3):
+    def __init__(self, momentum = 0.99, epsilon = 1e-3, **kwargs):
+        super().__init__(**kwargs)
+
         self._momentum = momentum
         self._epsilon  = epsilon
+        self.supports_masking = True
 
     def build(self, input_shape):
         if len(input_shape) != 2:
@@ -60,10 +73,10 @@ class SimpleNorm(Layer):
         return K.batch_normalization(
             inputs,
             self.moving_mean,
-            self.moving_variance,
+            self.moving_var,
             beta    = 0,
             gamma   = 1,
             axis    = 1,
-            epsilon = self.epsilon
+            epsilon = self._epsilon
         )
 

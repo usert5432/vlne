@@ -6,22 +6,33 @@ from tensorflow.keras.layers import (
 )
 
 from lstm_ee.consts import DEF_MASK
+from .layer_norm import SimpleNorm
 
-def modify_layer(layer, name, batchnorm = False, dropout = None):
+def get_normalization_layer(norm, **kwargs):
+    if norm is None:
+        return None
+
+    if norm == 'batch':
+        return BatchNormalization(**kwargs)
+
+    if norm == 'simple':
+        return SimpleNorm(**kwargs)
+
+def modify_layer(layer, name, norm = None, dropout = None):
     """Add BatchNorm and/or Dropout on top of `layer`"""
 
     if dropout is not None:
         name = "%s-dropout" % (name)
         layer = Dropout(dropout, name = name)(layer)
 
-    if batchnorm:
-        name = "%s-batchnorm" % (name)
-        layer = BatchNormalization(name = name)(layer)
+    if norm is not None:
+        name  = "%s-%snorm" % (name, norm)
+        layer = get_normalization_layer(norm, name = name)(layer)
 
     return layer
 
 def modify_series_layer(
-    layer, name, mask = False, batchnorm = False, dropout = None,
+    layer, name, mask = False, norm = None, dropout = None,
     mask_value = DEF_MASK
 ):
     """Add Mask and/or BatchNorm and/or Dropout on top of series `layer`"""
@@ -33,10 +44,11 @@ def modify_series_layer(
         name = "%s-dropout" % (name)
         layer = TimeDistributed(Dropout(dropout), name = name)(layer)
 
-    if batchnorm:
-        name = "%s-batchnorm" % (name)
-        layer = TimeDistributed(BatchNormalization(), name = name)(layer)
-        #layer = BatchNormalization(name = name)(layer)
+    if norm is not None:
+        name  = "%s-%snorm" % (name, norm)
+        layer = TimeDistributed(
+            get_normalization_layer(norm), name = name
+        )(layer)
 
     return layer
 
@@ -141,7 +153,7 @@ def add_resblocks(layer_input, n, name_prefix, **kwargs):
     return layer
 
 def add_hidden_layers(
-    layer_input, layer_sizes, name_prefix, batchnorm, dropout, **kwargs
+    layer_input, layer_sizes, name_prefix, norm, dropout, **kwargs
 ):
     """Add fully connected layers on top of `layer_input`
 
@@ -153,8 +165,8 @@ def add_hidden_layers(
         Shapes of layers to be added
     name_prefix : str
         Prefix to be added to names of new layers.
-    batchnorm : bool
-        Whether to add BatchNorm on top of FC layers.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers will be added on top of FC layers
         with a values of dropout of `dropout`.
@@ -175,12 +187,12 @@ def add_hidden_layers(
     for idx,size in enumerate(layer_sizes):
         name = "%s-%d" % (name_prefix, idx + 1)
         layer_hidden = Dense(size, name = name, **kwargs)(layer_hidden)
-        layer_hidden = modify_layer(layer_hidden, name, batchnorm, dropout)
+        layer_hidden = modify_layer(layer_hidden, name, norm, dropout)
 
     return layer_hidden
 
 def add_hidden_series_layers(
-    layer_input, layer_sizes, name_prefix, batchnorm, dropout, **kwargs
+    layer_input, layer_sizes, name_prefix, norm, dropout, **kwargs
 ):
     """Add fully connected layers on top of series layer `layer_input`
     C.f. `add_hidden_layers` for the description of arguments.
@@ -200,15 +212,15 @@ def add_hidden_series_layers(
 
         layer_hidden = modify_series_layer(
             layer_hidden, name,
-            mask      = False,
-            batchnorm = batchnorm,
-            dropout   = dropout
+            mask    = False,
+            norm    = norm,
+            dropout = dropout
         )
 
     return layer_hidden
 
 def add_stack_of_lstms(
-    layer_input, layer_size_dir_pairs, name_prefix, batchnorm, dropout,
+    layer_input, layer_size_dir_pairs, name_prefix, norm, dropout,
     **kwargs
 ):
     """Add a stack of LSTM layers on top of series layer `layer_input`
@@ -224,8 +236,8 @@ def add_stack_of_lstms(
         Direction can be either 'forward', 'backward' or 'bidirectional'.
     name_prefix : str
         Prefix to be added to names of new LSTM layers.
-    batchnorm : bool
-        Whether to add BatchNorm on top of the last LSTM layer.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layer will be added on top of the last LSTM
         layer with a value of dropout `dropout`.
@@ -270,10 +282,10 @@ def add_stack_of_lstms(
 
         layer_lstm = modify_series_layer(
             layer_lstm,
-            name      = name,
-            mask      = False,
-            batchnorm = batchnorm and is_middle_layer,
-            dropout   = dropout if is_middle_layer else None
+            name    = name,
+            mask    = False,
+            norm    = norm    if is_middle_layer else None,
+            dropout = dropout if is_middle_layer else None
         )
 
     return layer_lstm

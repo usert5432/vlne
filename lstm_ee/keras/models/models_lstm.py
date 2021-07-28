@@ -14,7 +14,7 @@ from .funcs import (
 )
 
 def make_standard_lstm_branch(
-    branch_label, input_layer, hidden_layers_spec, lstm_units, batchnorm,
+    branch_label, input_layer, hidden_layers_spec, lstm_units, norm,
     dropout, reg, lstm_kwargs = None, mask_value = DEF_MASK
 ):
     """Create the default block of layers to process sequential inputs.
@@ -30,9 +30,8 @@ def make_standard_lstm_branch(
         feeding them to the LSTM layer.
     lstm_units : int
         Number of units that the LSTM layer will have.
-    batchnorm : bool or None
-        If True then the BatchNorm layers will be used to normalize
-        activations.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers with `dropout` value of dropout will
         be added to regularize activations.
@@ -60,12 +59,12 @@ def make_standard_lstm_branch(
 
     input_layer = modify_series_layer(
         input_layer, 'input_%s' % (branch_label),
-        mask = True, batchnorm = batchnorm, mask_value = mask_value
+        mask = True, norm = norm, mask_value = mask_value
     )
 
     layer_hidden_pre = add_hidden_series_layers(
         input_layer, hidden_layers_spec, "hidden_pre_%s" % (branch_label),
-        batchnorm, dropout,
+        norm, dropout,
         activation         = 'relu',
         kernel_regularizer = reg,
     )
@@ -78,7 +77,7 @@ def make_standard_lstm_branch(
     return layer_lstm
 
 def make_stacked_lstm_branch(
-    branch_label, input_layer, hidden_layers_spec, lstm_spec, batchnorm,
+    branch_label, input_layer, hidden_layers_spec, lstm_spec, norm,
     dropout, reg, lstm_kwargs = None, mask_value = DEF_MASK
 ):
     """Create a stack of LSTMs to process sequential inputs.
@@ -95,9 +94,8 @@ def make_stacked_lstm_branch(
     lstm_spec : list of (int, str)
         List of pairs that specify number of units and directions of LSTM
         layers to be added. C.f. `add_stack_of_lstms`
-    batchnorm : bool or None
-        If True then the BatchNorm layers will be used to normalize
-        activations.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers with `dropout` value of dropout will
         be added to regularize activations.
@@ -125,19 +123,19 @@ def make_stacked_lstm_branch(
 
     input_layer = modify_series_layer(
         input_layer, 'input_%s' % (branch_label),
-        mask = True, batchnorm = batchnorm, mask_value = mask_value
+        mask = True, norm = norm, mask_value = mask_value
     )
 
     layer_hidden_pre = add_hidden_series_layers(
         input_layer, hidden_layers_spec, "hidden_pre_%s" % (branch_label),
-        batchnorm, dropout,
+        norm, dropout,
         activation         = 'relu',
         kernel_regularizer = reg,
     )
 
     layer_lstm = add_stack_of_lstms(
         layer_hidden_pre, lstm_spec,
-        'lstm_%s' % (branch_label), batchnorm, dropout,
+        'lstm_%s' % (branch_label), norm, dropout,
         recurrent_regularizer = reg, kernel_regularizer = reg,
         **lstm_kwargs
     )
@@ -145,7 +143,7 @@ def make_stacked_lstm_branch(
     return layer_lstm
 
 def make_standard_postprocess_branch(
-    input_layer, hidden_layers_spec, batchnorm, dropout, reg, n_resblocks
+    input_layer, hidden_layers_spec, norm, dropout, reg, n_resblocks
 ):
     """Create the default postprocessing block of layers.
 
@@ -156,9 +154,8 @@ def make_standard_postprocess_branch(
     hidden_layers_spec : list of int
         List of Dense layer sizes that will be used to postprocess LSTM layer
         outputs.
-    batchnorm : bool or None
-        If True then the BatchNorm layers will be used to normalize
-        activations.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers with `dropout` value of dropout will
         be added to regularize activations.
@@ -182,7 +179,7 @@ def make_standard_postprocess_branch(
     """
 
     layer_hidden_post = add_hidden_layers(
-        input_layer, hidden_layers_spec, "hidden_post", batchnorm, dropout,
+        input_layer, hidden_layers_spec, "hidden_post", norm, dropout,
         activation = 'relu', kernel_regularizer = reg,
     )
 
@@ -196,7 +193,7 @@ def model_lstm_v1(
     lstm_units         = 16,
     max_prongs         = 5,
     reg                = None,
-    batchnorm          = False,
+    norm               = None,
     vars_input_slice   = None,
     vars_input_png3d   = None,
     vars_input_png2d   = None,
@@ -218,8 +215,8 @@ def model_lstm_v1(
         Limit on the number of prongs that will be used. Default: 5.
     reg : keras.Regularizer or None, optional
         Regularization to use. Default: None
-    batchnorm : bool or None, optional
-        Whether to use Batch Normalization. Default: False.
+    norm : str or None
+        Name of the normalization layer to use.
     vars_input_slice : list of str or None
         List of slice level input variable names.
     vars_input_png3d : list of str or None
@@ -249,7 +246,7 @@ def model_lstm_v1(
     input_slc, input_png = inputs
 
     input_png = modify_series_layer(
-        input_png, 'input_png', mask = True, batchnorm = batchnorm
+        input_png, 'input_png', mask = True, norm = norm
     )
 
     layer_png_1 = LSTM(
@@ -257,7 +254,7 @@ def model_lstm_v1(
     )(input_png)
 
     layer_merged = Concatenate()([ layer_png_1, input_slc ])
-    layer_merged = modify_layer(layer_merged, 'layer_merged', batchnorm)
+    layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
 
     outputs = get_outputs(
         var_target_total, var_target_primary, reg, layer_merged
@@ -274,7 +271,7 @@ def model_lstm_v2(
     n_resblocks        = None,
     max_prongs         = 5,
     reg                = None,
-    batchnorm          = False,
+    norm               = None,
     dropout            = None,
     vars_input_slice   = None,
     vars_input_png3d   = None,
@@ -304,8 +301,8 @@ def model_lstm_v2(
         Limit on the number of prongs that will be used. Default: 5.
     reg : keras.Regularizer or None, optional
         Regularization to use. Default: None
-    batchnorm : bool or None, optional
-        Whether to use Batch Normalization. Default: False.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers with `dropout` value of dropout will
         be added to regularize activations.
@@ -342,13 +339,13 @@ def model_lstm_v2(
     input_slc, input_png = inputs
 
     layer_png_1 = make_standard_lstm_branch(
-        'png', input_png, layers_pre, lstm_units, batchnorm, dropout, reg
+        'png', input_png, layers_pre, lstm_units, norm, dropout, reg
     )
 
     layer_merged = Concatenate()([ layer_png_1, input_slc ])
-    layer_merged = modify_layer(layer_merged, 'layer_merged', batchnorm)
+    layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
     layer_post   = make_standard_postprocess_branch(
-        layer_merged, layers_post, batchnorm, dropout, reg, n_resblocks
+        layer_merged, layers_post, norm, dropout, reg, n_resblocks
     )
 
     outputs = get_outputs(
@@ -365,7 +362,7 @@ def model_lstm_v3(
     n_resblocks        = 0,
     max_prongs         = None,
     reg                = None,
-    batchnorm          = False,
+    norm               = None,
     dropout            = None,
     vars_input_slice   = None,
     vars_input_png3d   = None,
@@ -402,8 +399,8 @@ def model_lstm_v3(
         Limit on the number of prongs that will be used. Default: None.
     reg : keras.Regularizer or None, optional
         Regularization to use. Default: None
-    batchnorm : bool or None, optional
-        Whether to use Batch Normalization. Default: False.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers with `dropout` value of dropout will
         be added to regularize activations.
@@ -444,21 +441,21 @@ def model_lstm_v3(
 
     layer_lstm_png3d = make_standard_lstm_branch(
         'png3d', input_png3d, layers_pre, lstm_units3d,
-        batchnorm, dropout, reg, lstm_kwargs
+        norm, dropout, reg, lstm_kwargs
     )
 
     layer_lstm_png2d = make_standard_lstm_branch(
         'png2d', input_png2d, layers_pre, lstm_units2d,
-        batchnorm, dropout, reg, lstm_kwargs
+        norm, dropout, reg, lstm_kwargs
     )
 
     layer_merged = Concatenate()([
         layer_lstm_png3d, layer_lstm_png2d, input_slice
     ])
-    layer_merged = modify_layer(layer_merged, 'layer_merged', batchnorm)
+    layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
 
     layer_post   = make_standard_postprocess_branch(
-        layer_merged, layers_post, batchnorm, dropout, reg, n_resblocks
+        layer_merged, layers_post, norm, dropout, reg, n_resblocks
     )
 
     outputs = get_outputs(
@@ -475,7 +472,7 @@ def model_lstm_v3_stack(
     n_resblocks        = 0,
     max_prongs         = None,
     reg                = None,
-    batchnorm          = False,
+    norm               = None,
     dropout            = None,
     vars_input_slice   = None,
     vars_input_png3d   = None,
@@ -510,8 +507,8 @@ def model_lstm_v3_stack(
         Limit on the number of prongs that will be used. Default: None.
     reg : keras.Regularizer or None, optional
         Regularization to use. Default: None
-    batchnorm : bool or None, optional
-        Whether to use Batch Normalization. Default: False.
+    norm : str or None
+        Name of the normalization layer to use.
     dropout : float or None
         If not None then Dropout layers with `dropout` value of dropout will
         be added to regularize activations.
@@ -549,21 +546,21 @@ def model_lstm_v3_stack(
 
     layer_lstm_png3d = make_stacked_lstm_branch(
         'png3d', input_png3d, layers_pre, lstm3d_spec,
-        batchnorm, dropout, reg, lstm_kwargs
+        norm, dropout, reg, lstm_kwargs
     )
 
     layer_lstm_png2d = make_stacked_lstm_branch(
         'png2d', input_png2d, layers_pre, lstm2d_spec,
-        batchnorm, dropout, reg, lstm_kwargs
+        norm, dropout, reg, lstm_kwargs
     )
 
     layer_merged = Concatenate()([
         layer_lstm_png3d, layer_lstm_png2d, input_slice
     ])
-    layer_merged = modify_layer(layer_merged, 'layer_merged', batchnorm)
+    layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
 
     layer_post   = make_standard_postprocess_branch(
-        layer_merged, layers_post, batchnorm, dropout, reg, n_resblocks
+        layer_merged, layers_post, norm, dropout, reg, n_resblocks
     )
 
     outputs = get_outputs(
