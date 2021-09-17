@@ -2,9 +2,17 @@
 Definition of a `Config` class that parametrizes training.
 """
 
+import hashlib
 import json
+import os
+
+from lstm_ee.consts import DEF_SEED
+from .funcs import modify_vars
+
+CONFIG_FNAME = 'config.json'
 
 class Config:
+    # pylint: disable=too-many-instance-attributes
     """Training configuration.
 
     `Config` is a structure that holds parameters required to reproduce the
@@ -128,46 +136,114 @@ class Config:
         'weights',
     )
 
-    def _set_defaults(self):
-        """Set default values of parameters for backward compatibility"""
+    def __init__(
+        self,
+        batch_size         = 32,
+        dataset            = None,
+        early_stop         = None,
+        epochs             = 100,
+        loss               = None,
+        max_prongs         = None,
+        model              = None,
+        noise              = None,
+        optimizer          = None,
+        prong_sorters      = None,
+        regularizer        = None,
+        schedule           = None,
+        seed               = DEF_SEED,
+        shuffle_data       = True,
+        steps_per_epoch    = None,
+        test_size          = 0.2,
+        vars_input_slice   = None,
+        vars_input_png2d   = None,
+        vars_input_png3d   = None,
+        var_target_total   = None,
+        var_target_primary = None,
+        weights            = None,
+    ):
+        self.batch_size         = batch_size
+        self.dataset            = dataset
+        self.early_stop         = early_stop
+        self.epochs             = epochs
+        self.loss               = loss
+        self.max_prongs         = max_prongs
+        self.model              = model
+        self.noise              = noise
+        self.optimizer          = optimizer
+        self.prong_sorters      = prong_sorters
+        self.regularizer        = regularizer
+        self.schedule           = schedule
+        self.seed               = seed
+        self.shuffle_data       = shuffle_data
+        self.steps_per_epoch    = steps_per_epoch
+        self.test_size          = test_size
+        self.vars_input_slice   = vars_input_slice
+        self.vars_input_png2d   = vars_input_png2d
+        self.vars_input_png3d   = vars_input_png3d
+        self.var_target_total   = var_target_total
+        self.var_target_primary = var_target_primary
+        self.weights            = weights
 
-        # pylint: disable=access-member-before-definition
-        if self.shuffle_data is None:
-            self.shuffle_data = True
-
-    def __init__(self, **kwargs):
-
-        for k in self.__slots__:
-            setattr(self, k, None)
-
-        for k,v in kwargs.items():
-            if k in self.__slots__:
-                setattr(self, k, v)
-
-        self._set_defaults()
+    def to_dict(self):
+        return { x : getattr(self, x) for x in self.__slots__ }
 
     def save(self, savedir):
         """Save configuration to `savedir`/config.json"""
-        kwargs = { x : getattr(self, x) for x in self.__slots__ }
-
-        with open("%s/config.json" % (savedir), 'wt') as f:
-            json.dump(kwargs, f, sort_keys = True, indent = 4)
+        with open("%s/%s" % (savedir, CONFIG_FNAME), 'wt') as f:
+            json.dump(self.to_dict(), f, sort_keys = True, indent = 4)
 
     @staticmethod
     def load(savedir):
         """Load configuration from `savedir`/config.json"""
-        with open("%s/config.json" % (savedir), 'rt') as f:
+        with open("%s/%s" % (savedir, CONFIG_FNAME), 'rt') as f:
             kwargs = json.load(f)
 
         return Config(**kwargs)
 
     def __str__(self):
-        kwargs = { x : getattr(self, x) for x in self.__slots__ }
-        return json.dumps(kwargs, sort_keys = True)
+        return json.dumps(self.to_dict(), sort_keys = True)
 
     def pprint(self):
         """Pretty print configuration"""
-        kwargs = { x : getattr(self, x) for x in self.__slots__ }
-        return json.dumps(kwargs, sort_keys = True, indent = 4)
+        return json.dumps(self.to_dict(), sort_keys = True, indent = 4)
 
+    def modify_vars(self, vars_mod_slice, vars_mod_png2d, vars_mod_png3d):
+        """Modify input variables.
+
+        This function modifies slice, 2d and 3d prong input variables according
+        to the rules defined by the `vars_mod_slice`, `vars_mod_png2d`,
+        `vars_mod_png3d` parameters.
+        C.f. `Args` constructor for their description.
+        """
+
+        self.vars_input_slice = modify_vars(
+            self.vars_input_slice, vars_mod_slice
+        )
+
+        self.vars_input_png2d = modify_vars(
+            self.vars_input_png2d, vars_mod_png2d
+        )
+
+        self.vars_input_png3d = modify_vars(
+            self.vars_input_png3d, vars_mod_png3d
+        )
+
+    def get_hash(self):
+        s = json.dumps(self.to_dict(), sort_keys = True)
+
+        md5 = hashlib.md5()
+        md5.update(s.encode())
+
+        return md5.hexdigest()
+
+    def get_savedir(self, outdir, label = None):
+        if label is None:
+            label = self.get_hash()
+
+        savedir = 'model_m(%s)_%s' % (self.model['name'], label)
+        savedir = savedir.replace('/', ':')
+        path    = os.path.join(outdir, savedir)
+
+        os.makedirs(path, exist_ok = True)
+        return path
 

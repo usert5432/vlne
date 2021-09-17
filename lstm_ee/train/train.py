@@ -5,8 +5,9 @@ Functions to train `lstm_ee` model.
 import logging
 import numpy as np
 
-from lstm_ee.args import Args
-from lstm_ee.data import load_data
+from lstm_ee.args       import Args
+from lstm_ee.args.funcs import update_kwargs
+from lstm_ee.data       import load_data
 from .setup       import (
     get_optimizer, get_default_callbacks, get_keras_concurrency_kwargs,
     select_model
@@ -45,7 +46,7 @@ def return_training_stats(train_log, savedir):
 
     return result
 
-def create_and_train_model(args = None, extra_kwargs = None, **kwargs):
+def create_and_train_model(extra_kwargs = None, **args_dict):
     """Creates and trains `keras` model specified by arguments.
 
     Parameters
@@ -71,8 +72,10 @@ def create_and_train_model(args = None, extra_kwargs = None, **kwargs):
     return_training_stats
     """
 
-    if args is None:
-        args = Args(extra_kwargs = extra_kwargs, **kwargs)
+    if extra_kwargs is not None:
+        update_kwargs(args_dict, extra_kwargs)
+
+    args = Args.from_args_dict(**args_dict)
 
     LOGGER.info(
         "Starting training with parameters:\n%s", args.config.pprint()

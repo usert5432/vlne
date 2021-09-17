@@ -2,16 +2,15 @@
 Definition of the `Args` object that holds runtime training configuration.
 """
 
-import json
 import os
-import copy
 
-from lstm_ee.consts import ROOT_DATADIR, ROOT_OUTDIR, DEF_SEED
-
+from lstm_ee.consts import ROOT_DATADIR, ROOT_OUTDIR
 from .config import Config
-from .funcs import calc_savedir, modify_vars, update_kwargs
+
+FNAME_LABEL = 'label'
 
 class Args:
+    # pylint: disable=too-many-instance-attributes
     """Runtime training configuration.
 
     `Args` contains an instance of `Config` that defines the training, plus a
@@ -83,34 +82,14 @@ class Args:
     root_outdir : str
         Parent directory where all trained models are saved.
         Unless set explicitly it is equal to "${LSMT_EE_OUTDIR}".
-
-    Notes
-    -----
-    The `extra_kwargs` parameter is useful for example when you would like to
-    train multiple networks with the same configuration but say different
-    `batch_size`. In such case you would pass the basic configuration through
-    the **kwargs, but the `batch_size` parameter through the `extra_kwargs` = {
-    'batch_size' : N }. After that networks with different `batch_size` will be
-    saved in different directories, human friendly named according to the
-    `batch_size`.  C.f. `savedir` attribute
-
-    Keep in mind that `Args` class has a bit weird constructor. Maybe I will
-    simplify it in the future. But for now, note that due to the way `Args` is
-    constructed you can also pass a number of arguments defined in the
-    `Attributes` section using the `kwargs` dict parameter. Do *NOT* do that
-    unless you know what you are doing.
     """
 
     # pylint: disable=access-member-before-definition
     __slots__ = (
         'config',
         'savedir',
+        'label',
         'save_best',
-        'outdir',
-
-        'vars_mod_png2d',
-        'vars_mod_png3d',
-        'vars_mod_slice',
 
         'root_datadir',
         'root_outdir',
@@ -120,106 +99,82 @@ class Args:
         'concurrency',
         'workers',
 
-        'extra_kwargs',
+        'log_level',
     )
 
     def __init__(
-        self, loaded = False, extra_kwargs = None, **kwargs
+        self, config, savedir,
+        label        = None,
+        root_datadir = ROOT_DATADIR,
+        root_outdir  = ROOT_OUTDIR,
+        cache        = False,
+        disk_cache   = False,
+        concurrency  = False,
+        save_best    = True,
+        workers      = 0,
+        log_level    = 'INFO',
     ):
-        for k in self.__slots__:
-            setattr(self, k, None)
+        self.config       = config
+        self.savedir      = savedir
+        self.label        = label
+        self.root_datadir = root_datadir
+        self.root_outdir  = root_outdir
+        self.cache        = cache
+        self.disk_cache   = disk_cache
+        self.concurrency  = concurrency
+        self.save_best    = save_best
+        self.workers      = workers
+        self.log_level    = log_level
 
-        self.extra_kwargs = extra_kwargs
+    def save(self):
+        self.config.save(self.savedir)
 
-        kwargs = copy.deepcopy(kwargs)
-        update_kwargs(kwargs, extra_kwargs)
-
-        self.config = Config(**kwargs)
-
-        for k,v in kwargs.items():
-            if k in self.__slots__:
-                setattr(self, k, v)
-            else:
-                if not k in self.config.__slots__:
-                    raise ValueError(
-                        "Unknown Parameter '%s = %s'" % (k, v)
-                    )
-
-        self._init_default_values()
-
-        if not loaded:
-            self._modify_variables()
-            self._init_savedir()
+        if self.label is not None:
+            with open(os.path.join(self.savedir, FNAME_LABEL), 'wt') as f:
+                f.write(self.label)
 
     @staticmethod
     def load(savedir):
-        """Load `Args` from the directory `savedir`"""
-        # pylint: disable=attribute-defined-outside-init
-
         config = Config.load(savedir)
-        result = Args(loaded = True)
+        label  = None
 
-        result.config  = config
-        result.savedir = savedir
+        path_label = os.path.join(savedir, FNAME_LABEL)
 
-        result.outdir = os.path.normpath(
-            os.path.join(result.savedir, os.path.pardir)
+        if os.path.exists(path_label):
+            with open(path_label, 'rt') as f:
+                label = f.read()
+
+        return Args(config, savedir, label)
+
+    @staticmethod
+    def from_args_dict(
+        outdir,
+        label          = None,
+        root_datadir   = ROOT_DATADIR,
+        root_outdir    = ROOT_OUTDIR,
+        cache          = False,
+        disk_cache     = False,
+        concurrency    = False,
+        save_best      = True,
+        workers        = 0,
+        vars_mod_slice = None,
+        vars_mod_png2d = None,
+        vars_mod_png3d = None,
+        log_level      = 'INFO',
+        **args_dict
+    ):
+        config  = Config(**args_dict)
+        config.modify_vars(vars_mod_slice, vars_mod_png2d, vars_mod_png3d)
+
+        savedir = config.get_savedir(os.path.join(root_outdir, outdir), label)
+
+        result = Args(
+            config, savedir, label, root_datadir, root_outdir, cache,
+            disk_cache, concurrency, save_best, workers, log_level,
         )
 
-        try:
-            with open("%s/extra.json" % (savedir), 'rt') as f:
-                result.extra_kwargs = json.load(f)
-        except IOError:
-            pass
-
+        result.save()
         return result
-
-    def _init_default_values(self):
-        """Initialize unspecified `Args` attributes"""
-        if self.root_datadir is None:
-            self.root_datadir = ROOT_DATADIR
-
-        if self.root_outdir is None:
-            self.root_outdir = ROOT_OUTDIR
-
-        if self.config.seed is None:
-            self.config.seed = DEF_SEED
-
-        if self.save_best is None:
-            self.save_best = True
-
-    def _modify_variables(self):
-        """Modify input variables.
-
-        This function modifies slice, 2d and 3d prong input variables according
-        to the rules defined by the `vars_mod_slice`, `vars_mod_png2d`,
-        `vars_mod_png3d` parameters.
-        C.f. `Args` constructor for their description.
-        """
-
-        self.config.vars_input_slice = modify_vars(
-            self.vars_input_slice, self.vars_mod_slice
-        )
-
-        self.config.vars_input_png2d = modify_vars(
-            self.vars_input_png2d, self.vars_mod_png2d
-        )
-
-        self.config.vars_input_png3d = modify_vars(
-            self.vars_input_png3d, self.vars_mod_png3d
-        )
-
-    def _init_savedir(self):
-        """Create training directory and save `Args` there."""
-        self.savedir = calc_savedir(
-            os.path.join(self.root_outdir, self.outdir),
-            'model', self.config, self.extra_kwargs
-        )
-
-        self.config.save(self.savedir)
-
-        with open("%s/extra.json" % (self.savedir), 'wt') as f:
-            json.dump(self.extra_kwargs, f, sort_keys = True, indent = 4)
 
     def __getattr__(self, name):
         """Get attribute `name` from `Args.config`.
