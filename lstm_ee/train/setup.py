@@ -37,6 +37,7 @@ def get_schedule(schedule):
 
     name   = schedule['name']
     kwargs = schedule.get('kwargs', {}) or {}
+    kwargs['verbose'] = True
 
     if name.lower() == 'standard':
         return keras.callbacks.ReduceLROnPlateau(**kwargs)
@@ -55,6 +56,7 @@ def get_early_stop(early_stop):
 
     name   = early_stop['name']
     kwargs = early_stop.get('kwargs', {}) or {}
+    kwargs['verbose'] = True
 
     if name.lower() == 'standard':
         return keras.callbacks.EarlyStopping(**kwargs)
