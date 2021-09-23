@@ -13,22 +13,40 @@ from .funcs import (
     add_hidden_series_layers, get_normalization_layer
 )
 
+@tf.keras.utils.register_keras_serializable('lstm_ee.keras.models')
 class PositionWiseFFN(tf.keras.layers.Layer):
 
     def __init__(self, num_hidden, ffn_num_hidden, activation, **kwargs):
         super().__init__(**kwargs)
         self.supports_masking = True
 
+        self.num_hidden     = num_hidden
+        self.ffn_num_hidden = ffn_num_hidden
+        self.activation     = activation
+
         self.fc1 = TimeDistributed(
             Dense(ffn_num_hidden, activation = activation)
         )
         self.fc2 = TimeDistributed(Dense(num_hidden))
+
+    def get_config(self):
+        config = super().get_config()
+
+        config.update({
+            "num_hidden"     : self.num_hidden,
+            "ffn_num_hidden" : self.ffn_num_hidden,
+            "activation"     : self.activation,
+        })
+
+        return config
+
 
     def call(self, inputs, **kwargs):
         y = self.fc1(inputs, **kwargs)
 
         return self.fc2(y, **kwargs)
 
+@tf.keras.utils.register_keras_serializable('lstm_ee.keras.models')
 class TransformerEncoderBlock(tf.keras.layers.Layer):
     # pylint: disable=too-many-instance-attributes
 
@@ -86,6 +104,7 @@ class TransformerEncoderBlock(tf.keras.layers.Layer):
 
         return y2
 
+@tf.keras.utils.register_keras_serializable('lstm_ee.keras.models')
 class GlobalTransPooling(tf.keras.layers.Layer):
 
     def __init__(self, pool_type = 'sum', axis = 1, **kwargs):
@@ -120,8 +139,8 @@ class GlobalTransPooling(tf.keras.layers.Layer):
     def get_config(self):
         config = super(GlobalTransPooling, self).get_config().copy()
         config.update({
-            'axis' : self._axis,
-            'type' : self._type,
+            'axis'      : self._axis,
+            'pool_type' : self._type,
         })
 
         return config

@@ -1,6 +1,8 @@
 """Functions to save/load trained networks."""
 
 import tensorflow
+
+import lstm_ee.train.setup
 from lstm_ee.args import Args
 
 def load_model(savedir, compile = False):
