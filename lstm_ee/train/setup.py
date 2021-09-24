@@ -2,6 +2,7 @@
 A collection of functions to setup keras training.
 """
 
+import tensorflow as tf
 import tensorflow.keras as keras
 
 from lstm_ee.keras.callbacks import TrainTime
@@ -166,4 +167,13 @@ def get_keras_concurrency_kwargs(args):
         )
 
     return result
+
+def limit_tf_memory_growth():
+    gpus = tf.config.list_physical_devices('GPU')
+
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 

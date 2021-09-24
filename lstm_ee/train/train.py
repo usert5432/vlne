@@ -10,7 +10,7 @@ from lstm_ee.args.funcs import update_kwargs
 from lstm_ee.data       import load_data
 from .setup       import (
     get_optimizer, get_default_callbacks, get_keras_concurrency_kwargs,
-    select_model
+    select_model, limit_tf_memory_growth
 )
 
 LOGGER = logging.getLogger('lstm_ee.train')
@@ -71,6 +71,8 @@ def create_and_train_model(extra_kwargs = None, **args_dict):
     lstm_ee.args.Args
     return_training_stats
     """
+
+    limit_tf_memory_growth()
 
     if extra_kwargs is not None:
         update_kwargs(args_dict, extra_kwargs)
