@@ -82,6 +82,15 @@ def add_basic_eval_args(parser, presets_eval):
         type    = str,
     )
 
+    parser.add_argument(
+        '--label',
+        help    = 'Evaluation label',
+        default = None,
+        dest    = 'label',
+        type    = str,
+    )
+
+
 def add_concurrency_parser(parser):
     """Create cmdargs parser of the concurrency/caching options"""
 

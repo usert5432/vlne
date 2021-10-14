@@ -1,8 +1,7 @@
 """Presets for the NuE energy estimator training/eval"""
 
-from lstm_ee.presets.numu.specs import (
-    get_numu_eval_presets, LABEL_PRIMARY, LABEL_TOTAL
-)
+from lstm_ee.consts import LABEL_PRIMARY, LABEL_TOTAL
+from lstm_ee.presets.eval_preset import EvalPreset
 
 BASE_MAP_DUNE = {
     LABEL_PRIMARY : "numue.lepE",
@@ -37,18 +36,14 @@ preset_dune_numu_v1 = {
     ],
 }
 
-def get_dune_numu_eval_presets(energy_range):
-    """Construct DUNE numu eval presets from NOvA preset"""
-    result = get_numu_eval_presets(energy_range)
-    result['base_map'] = BASE_MAP_DUNE
-
-    return result
-
-def add_train_dune_numu_presets(presets):
-    """Add DUNE numu training presets to the `presets` dict"""
+def add_dune_train_presets(presets):
     presets['dune_numu_v1'] = preset_dune_numu_v1
 
-def add_eval_dune_numu_presets(presets):
-    """Add DUNE numu eval presets to the `presets` dict"""
-    presets['dune_numu_5GeV'] = get_dune_numu_eval_presets((0, 5))
+def add_dune_eval_presets(presets):
+    presets['dune_numu'] = EvalPreset(
+        name_overrides = {
+            LABEL_PRIMARY : 'Muon',
+        },
+        base_overrides = BASE_MAP_DUNE,
+    )
 

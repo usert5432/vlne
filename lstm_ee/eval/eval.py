@@ -13,7 +13,7 @@ from lstm_ee.eval.gauss import fit_gaussian
 
 LOGGER = logging.getLogger('lstm_ee.eval')
 
-def calc_fom_stats_hists(pred_dict, true_dict, weights, fom_specs, margin):
+def calc_fom_stats_hists(pred_dict, true_dict, weights, hist_specs, margin):
     """
     Calculate relative energy resolution stats and hists for each energy type.
 
@@ -30,7 +30,7 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, fom_specs, margin):
         should be the same as `pred_dict`.
     weights : ndarray, shape (N,)
         An array of sample weights
-    fom_specs : dict
+    hist_specs : dict
         Dictionary where keys are energy labels and values are the `PlotSpec`
         objects that parametrize histograms of the relative energy resolution.
     margin : float
@@ -69,12 +69,12 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, fom_specs, margin):
 
     for k in pred_dict.keys():
         stats_dict[k] = calc_fom_stats(
-            pred_dict[k], true_dict[k], weights, fom_specs[k].range_x
+            pred_dict[k], true_dict[k], weights, hist_specs[k].range_x
         )
 
         rhist = calc_fom_hist(
             pred_dict[k], true_dict[k], weights,
-            fom_specs[k].bins_x, fom_specs[k].range_x,
+            hist_specs[k].bins_x, hist_specs[k].range_x,
         )
         rhist_dict[k] = rhist
 
@@ -87,7 +87,7 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, fom_specs, margin):
 
     return stats_dict, rhist_dict
 
-def eval_base(dgen, pred_map, fom_specs, margin = 0.5):
+def eval_base(dgen, pred_map, hist_specs, margin = 0.5):
     """
     Calculate relative energy resolution stats and hists for baseline energies.
 
@@ -101,7 +101,7 @@ def eval_base(dgen, pred_map, fom_specs, margin = 0.5):
     pred_map : dict
         Dictionary that specifies mapping between energy label and a variable
         name in `dgen.data_loader` that holds baseline reconstructed energy.
-    fom_specs : dict
+    hist_specs : dict
         Dictionary where keys are energy labels and values are the `PlotSpec`
         objects that parametrize histograms of the relative energy resolution.
     margin : float
@@ -126,10 +126,10 @@ def eval_base(dgen, pred_map, fom_specs, margin = 0.5):
     true_dict = get_true_energies(dgen)
 
     return calc_fom_stats_hists(
-        pred_dict, true_dict, weights, fom_specs, margin
+        pred_dict, true_dict, weights, hist_specs, margin
     )
 
-def eval_model(args, dgen, model, fom_specs, margin = 0.5):
+def eval_model(args, dgen, model, hist_specs, margin = 0.5):
     """
     Calculate relative energy resolution stats and hists for pred energies.
 
@@ -143,7 +143,7 @@ def eval_model(args, dgen, model, fom_specs, margin = 0.5):
         Data generator which will be fed to the `model` to predict energies.
     model : `keras.Model`
         Model that will be used to predict energies.
-    fom_specs : dict
+    hist_specs : dict
         Dictionary where keys are energy labels and values are the `PlotSpec`
         objects that parametrize histograms of the relative energy resolution.
     margin : float
@@ -168,11 +168,11 @@ def eval_model(args, dgen, model, fom_specs, margin = 0.5):
     true_dict = get_true_energies(dgen)
 
     return calc_fom_stats_hists(
-        pred_dict, true_dict, weights, fom_specs, margin
+        pred_dict, true_dict, weights, hist_specs, margin
     )
 
 def evaluate(
-    args, dgen, model, base_map, fom_specs, fit_margin, outdir
+    args, dgen, model, base_map, hist_specs, fit_margin, outdir
 ):
     """Calculate relative energy resolution hists for the `model` and baseline.
 
@@ -191,7 +191,7 @@ def evaluate(
         name in `dgen.data_loader` that holds baseline reconstructed energy.
         Possible labels are:
           [ `LABEL_PRIMARY`, `LABEL_SECONDARY`, `LABEL_TOTAL' ]
-    fom_specs : dict
+    hist_specs : dict
         Dictionary where keys are energy labels and values are the `PlotSpec`
         objects that parametrize histograms of the relative energy resolution.
     fom_spec : PlotSpec
@@ -223,12 +223,12 @@ def evaluate(
     eval_base
     """
     stats_model_dict, rhist_model_dict = eval_model(
-        args, dgen, model, fom_specs, fit_margin
+        args, dgen, model, hist_specs, fit_margin
     )
     save_model_stats(stats_model_dict, outdir)
 
     stats_base_dict, rhist_base_dict = eval_base(
-        dgen, base_map, fom_specs, fit_margin
+        dgen, base_map, hist_specs, fit_margin
     )
     save_base_stats(stats_base_dict, outdir)
 

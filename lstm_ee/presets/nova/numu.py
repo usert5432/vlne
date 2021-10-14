@@ -1,6 +1,7 @@
-"""Presets for the NuE energy estimator training/eval"""
+"""Presets for the NOvA NuMu energy estimator training/eval"""
 
-from lstm_ee.presets.numu.specs import get_numu_eval_presets
+from lstm_ee.consts import LABEL_TOTAL, LABEL_PRIMARY
+from lstm_ee.presets.eval_preset import EvalPreset
 
 preset_numu_base = {
     'var_target_total'   : 'trueE',
@@ -122,12 +123,19 @@ preset_numu_slice_linear = {
 
 def add_train_numu_presets(presets):
     """Add numu training presets to the `presets` dict"""
-    presets['numu_v2'] = preset_numu_v2
-    presets['numu_v3'] = preset_numu_v3
-    presets['numu_slice-simple'] = preset_numu_slice_linear
+    presets['nova_numu_v2'] = preset_numu_v2
+    presets['nova_numu_v3'] = preset_numu_v3
+    presets['nova_numu_slice-simple'] = preset_numu_slice_linear
 
 def add_eval_numu_presets(presets):
     """Add numu eval presets to the `presets` dict"""
-    presets['numu_5GeV'] = get_numu_eval_presets((0, 5))
-    presets['numu_7GeV'] = get_numu_eval_presets((0, 7))
+    presets['nova_numu'] = EvalPreset(
+        name_overrides = {
+            LABEL_PRIMARY : 'Muon',
+        },
+        base_overrides = {
+            LABEL_PRIMARY : "numuRecoMuonE",
+            LABEL_TOTAL   : "numuRecoE",
+        },
+    )
 

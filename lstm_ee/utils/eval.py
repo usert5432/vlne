@@ -13,8 +13,8 @@ from .io          import load_model
 
 def make_eval_outdir(outdir, eval_config):
     """Create evaluation subdir unique for `eval_config`"""
-    subdir = eval_config.get_eval_subdir()
-    result = os.path.join(outdir, 'evals', subdir)
+    result = os.path.join(outdir, 'evals')
+    result = eval_config.get_evaldir(result)
 
     os.makedirs(result, exist_ok = True)
 
@@ -47,10 +47,10 @@ def standard_eval_prologue(cmdargs, presets_eval):
     eval_config.modify_eval_args(args)
     modify_concurrency_args(args, cmdargs)
 
-    _, dgen    = load_data(args)
-    outdir     = make_eval_outdir(cmdargs.outdir, eval_config)
-    plotdir    = make_plotdir(outdir)
-    eval_specs = presets_eval[cmdargs.preset]
+    _, dgen = load_data(args)
+    outdir  = make_eval_outdir(cmdargs.outdir, eval_config)
+    plotdir = make_plotdir(outdir)
+    preset  = presets_eval[cmdargs.preset]
 
-    return (dgen, args, model, outdir, plotdir, eval_specs)
+    return (dgen, args, model, outdir, plotdir, preset)
 

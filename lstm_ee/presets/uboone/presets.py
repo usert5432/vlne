@@ -1,10 +1,9 @@
 """Presets for the NuE energy estimator training/eval"""
 
-from lstm_ee.presets.numu.specs import (
-    get_numu_eval_presets, LABEL_PRIMARY, LABEL_TOTAL
-)
+from lstm_ee.consts import LABEL_PRIMARY, LABEL_TOTAL
+from lstm_ee.presets.eval_preset import EvalPreset
 
-BASE_MAP_DUNE = {
+BASE_MAP_UBOONE = {
     LABEL_PRIMARY : "reco.lepE",
     LABEL_TOTAL   : "reco.nuE",
 }
@@ -40,18 +39,24 @@ preset_uboone_numu_v1 = {
     ],
 }
 
-def get_uboone_numu_eval_presets(energy_range):
-    """Construct MicroBooNE numu eval presets from NOvA preset"""
-    result = get_numu_eval_presets(energy_range)
-    result['base_map'] = BASE_MAP_DUNE
-
-    return result
-
-def add_train_uboone_numu_presets(presets):
-    """Add MicroBooNE numu training presets to the `presets` dict"""
+def add_uboone_train_presets(presets):
     presets['uboone_numu_v1'] = preset_uboone_numu_v1
+    presets['uboone_v1'] = preset_uboone_numu_v1
 
-def add_eval_uboone_numu_presets(presets):
-    """Add MicroBooNE numu eval presets to the `presets` dict"""
-    presets['uboone_numu_5GeV'] = get_uboone_numu_eval_presets((0, 6))
+def add_uboone_eval_presets(presets):
+    presets['uboone_numu'] = EvalPreset(
+        name_overrides = {
+            LABEL_PRIMARY : 'Muon',
+        },
+        base_overrides = BASE_MAP_UBOONE,
+    )
+
+    presets['uboone_nue'] = EvalPreset(
+        name_overrides = {
+            LABEL_PRIMARY : 'Electron',
+        },
+        base_overrides = BASE_MAP_UBOONE,
+    )
+
+    presets['uboone_generic'] = EvalPreset(base_overrides = BASE_MAP_UBOONE)
 

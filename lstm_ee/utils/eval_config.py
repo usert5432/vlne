@@ -3,25 +3,9 @@ Definition of `EvalConfig` that holds parameters of evaluation.
 """
 
 import json
+import os
 
-def build_eval_subdir(list_of_label_value):
-    """Create evaluation subdir name from a list of evaluation parameters"""
-    tokens = []
-
-    for label,value in list_of_label_value:
-        if value is None:
-            continue
-
-        tokens.append('%s(%s)' % (label, value))
-
-    result = "_".join(tokens)
-
-    if len(result) == 0:
-        result = 'eval'
-
-    result = result.replace('/', '::')
-
-    return result
+EVAL_CONFIG_FNAME = 'evsl_config.json'
 
 def modify_args_value(args, attr, eval_value, dtype = None):
     """Set `args` attribute `attr` to `eval_value`.
@@ -32,7 +16,7 @@ def modify_args_value(args, attr, eval_value, dtype = None):
       - if `eval_value` == 'none', then the `attr` value will be set to None.
       - otherwise, `attr` = `eval_value`
     """
-    if eval_value is None:
+    if (eval_value is None) or (eval_value == 'same'):
         return
 
     if eval_value.lower() == 'none':
@@ -53,7 +37,7 @@ def modify_args_value_from_conf(args, attr, eval_value):
       - if `eval_value` == 'none', then the `attr` value will be set to None.
       - otherwise, `attr` = json.load(`eval_value`)
     """
-    if eval_value is None:
+    if (eval_value is None) or (eval_value == 'same'):
         return
 
     if eval_value.lower() == 'none':
@@ -77,6 +61,8 @@ class EvalConfig:
 
     Parameters
     ----------
+    label : str or None,
+        Label used to uniquely identify current evaluation.
     data : str or None,
         Name of the evaluation dataset.
     noise : str or None,
@@ -98,17 +84,23 @@ class EvalConfig:
         C.f. `Config.weights`.
     """
 
-    @staticmethod
-    def _recognize_same(value):
-        if isinstance(value, str) and (value == 'same'):
-            return None
-
-        return value
+    # pylint: disable=too-many-instance-attributes
+    __slots__ = [
+        'label',
+        'data',
+        'noise',
+        'preset',
+        'prong_sorter',
+        'seed',
+        'test_size',
+        'weights',
+    ]
 
     @staticmethod
     def from_cmdargs(cmdargs):
         """Construct `EvalConfig` from parameters from `argparse.Namespace`"""
         return EvalConfig(
+            cmdargs.label,
             cmdargs.data,
             cmdargs.noise,
             cmdargs.preset,
@@ -119,27 +111,53 @@ class EvalConfig:
         )
 
     def __init__(
-        self, data, noise, preset, prong_sorter, seed, test_size, weights
+        self, label, data, noise, preset, prong_sorter, seed, test_size,
+        weights
     ):
-        self.data         = EvalConfig._recognize_same(data)
-        self.noise        = EvalConfig._recognize_same(noise)
-        self.preset       = EvalConfig._recognize_same(preset)
-        self.prong_sorter = EvalConfig._recognize_same(prong_sorter)
-        self.seed         = EvalConfig._recognize_same(seed)
-        self.test_size    = EvalConfig._recognize_same(test_size)
-        self.weights      = EvalConfig._recognize_same(weights)
+        self.label        = label
+        self.data         = data
+        self.noise        = noise
+        self.preset       = preset
+        self.prong_sorter = prong_sorter
+        self.seed         = seed
+        self.test_size    = test_size
+        self.weights      = weights
 
-    def get_eval_subdir(self):
-        """Create eval subdir that is unique for this evaluation config."""
-        return build_eval_subdir([
-            ('data',    self.data),
-            ('noise',   self.noise),
-            ('preset',  self.preset),
-            ('psort',   self.prong_sorter),
-            ('seed',    self.seed),
-            ('tsize',   self.test_size),
-            ('weights', self.weights),
-        ])
+    def to_dict(self):
+        return { k : getattr(self, k) for k in self.__slots__ }
+
+    def to_json(self, **kwargs):
+        return json.dumps(self.to_dict(), **kwargs)
+
+    def get_evaldir(self, outdir):
+        return os.path.join(
+            outdir,
+            'eval_d(%s)_p(%s)_%s' % (self.data, self.preset, self.label)
+        )
+
+    @staticmethod
+    def load(evaldir):
+        path = os.path.join(evaldir, EVAL_CONFIG_FNAME)
+
+        with open(path, 'rt') as f:
+            return EvalConfig(**json.load(f))
+
+    def save(self, evaldir):
+        path = os.path.join(evaldir, EVAL_CONFIG_FNAME)
+
+        curr_conf_str = self.to_json(sort_keys = True, indent = 4)
+
+        if os.path.exists(path):
+            with open(path, 'rt') as f:
+                prev_conf_str = f.read()
+
+            assert curr_conf_str == prev_conf_str, \
+                "Evaluation config collision detected: %s != %s" % (
+                    curr_conf_str, prev_conf_str
+                )
+
+        with open(path, 'wt') as f:
+            f.write(curr_conf_str)
 
     def modify_eval_args(self, args):
         """Modify parameters of `args` using values from `self`"""

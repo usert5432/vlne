@@ -1,16 +1,7 @@
-"""Presets for the NuE energy estimator training/eval"""
+"""Presets for the NOvA NuE energy estimator training/eval"""
 
-from lstm_ee.presets.nue.specs import (
-    plot_specs_nue_rel_vs_true,
-    plot_specs_nue_hist,
-    plot_specs_nue_binstats_abs,
-    plot_specs_nue_binstats_rel,
-    plot_specs_nue_fom,
-    base_map,
-    name_map,
-    units_map,
-)
-
+from lstm_ee.consts import LABEL_TOTAL, LABEL_PRIMARY
+from lstm_ee.presets.eval_preset import EvalPreset
 
 preset_nue_base = {
     'var_target_total'   : [ 'trueE'    ],
@@ -81,18 +72,17 @@ preset_nue_v3 = {
 
 def add_train_nue_presets(presets):
     """Add nue training presets to the `presets` dict"""
-    presets['nue_v3'] = preset_nue_v3
+    presets['nova_nue_v3'] = preset_nue_v3
 
 def add_eval_nue_presets(presets):
     """Add nue eval presets to the `presets` dict"""
-    presets['nue'] = {
-        'rel_vs_true' : plot_specs_nue_rel_vs_true,
-        'hist'        : plot_specs_nue_hist,
-        'binstats_abs': plot_specs_nue_binstats_abs,
-        'binstats_rel': plot_specs_nue_binstats_rel,
-        'fom'         : plot_specs_nue_fom,
-        'base_map'    : base_map,
-        'name_map'    : name_map,
-        'units_map'   : units_map,
-    }
+    presets['nova_nue'] = EvalPreset(
+        name_overrides = {
+            LABEL_PRIMARY : 'Electron',
+        },
+        base_overrides = {
+            LABEL_PRIMARY : "nueRecoLepE",
+            LABEL_TOTAL   : "nueRecoE",
+        },
+    )
 
