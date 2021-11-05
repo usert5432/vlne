@@ -39,6 +39,18 @@ def modify_title(spec, value):
 
     return spec
 
+def parse_binning(cmdargs, suffix = ''):
+    result = {
+        'range' + suffix : (cmdargs.range_lo, cmdargs.range_hi),
+    }
+
+    if cmdargs.bin_edges is not None:
+        result['bins' + suffix] = cmdargs.bin_edges
+    else:
+        result['bins' + suffix] = cmdargs.bins
+
+    return result
+
 def standard_eval_prologue(cmdargs, presets_eval):
     """Standard evaluation prologue"""
     args, model = load_model(cmdargs.outdir, compile = False)

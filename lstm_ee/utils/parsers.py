@@ -90,7 +90,6 @@ def add_basic_eval_args(parser, presets_eval):
         type    = str,
     )
 
-
 def add_concurrency_parser(parser):
     """Create cmdargs parser of the concurrency/caching options"""
 
@@ -122,6 +121,46 @@ def add_concurrency_parser(parser):
         dest    = 'concurrency',
         choices = [ 'thread', 'process' ],
         default = None,
+    )
+
+def add_hist_binning_parser(
+    parser,
+    default_range_lo = None,
+    default_range_hi = None,
+    default_bins     = 10,
+):
+
+    parser.add_argument(
+        '--range-lo',
+        help    = 'plot left boundary',
+        default = default_range_lo,
+        dest    = 'range_lo',
+        type    = float,
+    )
+
+    parser.add_argument(
+        '--range-hi',
+        help    = 'plot right boundary',
+        default = default_range_hi,
+        dest    = 'range_hi',
+        type    = float,
+    )
+
+    parser.add_argument(
+        '--bins',
+        help    = 'number of bins',
+        default = default_bins,
+        dest    = 'bins',
+        type    = int,
+    )
+
+    parser.add_argument(
+        '--bin_edges',
+        help    = 'bin edges. Overrides bins and range settings',
+        default = None,
+        dest    = 'bin_edges',
+        type    = float,
+        nargs   = '+',
     )
 
 def parse_concurrency_cmdargs(config_dict, title = "Train"):
