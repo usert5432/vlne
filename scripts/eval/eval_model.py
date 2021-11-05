@@ -1,5 +1,3 @@
-"""Evaluate model energy resolutions."""
-
 import argparse
 import os
 
@@ -8,9 +6,9 @@ from lstm_ee.utils.log     import setup_logging
 from lstm_ee.utils.parsers import (
     add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
 )
-from lstm_ee.utils.eval    import standard_eval_prologue, parse_binning
-from lstm_ee.eval.eval     import evaluate
-from lstm_ee.plot.fom      import plot_fom
+from lstm_ee.utils.eval     import standard_eval_prologue, parse_binning
+from lstm_ee.eval.eval      import evaluate
+from lstm_ee.plot.fom       import plot_fom
 from lstm_ee.plot.plot_spec import PlotSpec
 
 def make_hist_specs(cmdargs, preset):
@@ -43,7 +41,7 @@ def add_energy_resolution_parser(parser):
     )
 
 def parse_cmdargs():
-    parser = argparse.ArgumentParser("Evaluate Performance of the Model")
+    parser = argparse.ArgumentParser("Evaluate Energy Resolution")
 
     add_basic_eval_args(parser, PRESETS_EVAL)
     add_concurrency_parser(parser)
