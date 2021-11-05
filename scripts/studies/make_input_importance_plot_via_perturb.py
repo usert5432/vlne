@@ -22,11 +22,36 @@ from lstm_ee.data.data_generator import DataSmear
 from lstm_ee.plot.profile        import plot_profile
 from lstm_ee.presets             import PRESETS_EVAL
 from lstm_ee.utils               import setup_logging
-from lstm_ee.utils.eval          import standard_eval_prologue
+from lstm_ee.utils.eval          import standard_eval_prologue, parse_binning
 from lstm_ee.utils.parsers       import (
-    add_basic_eval_args, add_concurrency_parser
+    add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
 )
 from lstm_ee.data.data_generator.keras_sequence import KerasSequence
+from lstm_ee.plot.plot_spec import PlotSpec
+
+def make_hist_specs(cmdargs, preset):
+    binning = parse_binning(cmdargs, suffix = '_x')
+
+    return {
+        label : PlotSpec(**binning)
+        for (label, name) in preset.name_map.items()
+    }
+
+def add_energy_resolution_parser(parser):
+    parser.add_argument(
+        '--fit_margin',
+        help    = 'Fraction of resolution peak to fit gaussian',
+        default = 0.5,
+        dest    = 'fit_margin',
+        type    = float,
+    )
+
+    add_hist_binning_parser(
+        parser,
+        default_range_lo = -1,
+        default_range_hi = 1,
+        default_bins     = 100,
+    )
 
 def parse_cmdargs():
     """Parse command line arguments"""
@@ -54,44 +79,40 @@ def parse_cmdargs():
         help   = 'Show y-values for each point'
     )
 
+    add_energy_resolution_parser(parser)
+
     return parser.parse_args()
 
 def prologue(cmdargs):
     """Load dataset, model and initialize output directory"""
-    dgen, args, model, outdir, plotdir, eval_specs = \
+    dgen, args, model, outdir, plotdir, preset = \
         standard_eval_prologue(cmdargs, PRESETS_EVAL)
 
-    plotdir    = os.path.join(
-        outdir, 'input_importance_perturb_%.3e' % (cmdargs.smear)
+    plotdir = os.path.join(
+        outdir, f'input_importance_perturb_{cmdargs.smear:.3e}'
     )
     os.makedirs(plotdir, exist_ok = True)
 
-    return (args, model, dgen, plotdir, eval_specs)
+    return (args, model, dgen, plotdir, preset)
 
 def get_stats_for_energy(stat_list, energy):
     """Extract stats for a given energy type"""
     return pd.DataFrame([ x[energy] for x in stat_list ])
 
 def plot_vars_profile(
-    var_list, stat_list, label_x, annotate, eval_specs, plotdir, ext,
-    stats_to_plot = [ 'rms', 'sigma' ],
+    var_list, stat_list, label_x, annotate, preset, plotdir, ext,
+    stats_to_plot = ( 'rms', 'sigma' ),
 ):
-    """Plot input importance vs input variable"""
-    # pylint: disable=dangerous-default-value
-
     for energy in stat_list[0].keys():
-        #for stat in stat_list[0][energy].keys():
         for stat in stats_to_plot:
 
             label_y = '%s(%s [%s])' % (
-                stat,
-                eval_specs['name_map'][energy],
-                eval_specs['units_map'][energy],
+                stat, preset.name_map[energy], preset.units_map[energy]
             )
 
-            fname = "%s/%s_%s_vs_%s_ann(%s)" % (
-                plotdir, stat, energy, label_x, annotate
-            )
+            fname  = f"{stat}_{energy}_vs_{label_x}"
+            fname += "_ann" if annotate else ''
+            fname  = os.path.join(plotdir, fname)
 
             stats = get_stats_for_energy(stat_list, energy)
 
@@ -155,8 +176,8 @@ def save_stats(var_list, stat_list, label, plotdir):
     df.to_csv('%s/stats_%s.csv' % (plotdir, label))
 
 def make_perturb_profile(
-    smeared_var_generator, var_list, stat_list, args, model, eval_specs,
-    plotdir, label, cmdargs
+    smeared_var_generator, var_list, stat_list, args, model, hist_specs,
+    preset, plotdir, label, cmdargs
 ):
     """
     Evaluate performance for generators yielded by `smeared_var_generator`
@@ -164,7 +185,6 @@ def make_perturb_profile(
     if smeared_var_generator is None:
         return
 
-    FIT_MARGIN = 0.5
     var_list   = var_list[:]
     stat_list  = stat_list[:]
 
@@ -172,42 +192,43 @@ def make_perturb_profile(
         logging.info("Evaluating '%s' var...", vname)
 
         stats, _ = eval_model(
-            args, KerasSequence(dgen), model, eval_specs['fom'], FIT_MARGIN
+            args, KerasSequence(dgen), model, hist_specs, cmdargs.fit_margin
         )
 
-        var_list .append("%s : %g" % (vname, cmdargs.smear))
+        var_list .append(f"{vname} : {cmdargs.smear}")
         stat_list.append(stats)
 
     plot_vars_profile(
-        var_list, stat_list, label, cmdargs.annotate, eval_specs, plotdir,
+        var_list, stat_list, label, cmdargs.annotate, preset, plotdir,
         cmdargs.ext
     )
 
     save_stats(var_list, stat_list, label, plotdir)
 
 def main():
-    # pylint: disable=missing-function-docstring
     setup_logging()
 
     cmdargs = parse_cmdargs()
-    args, model, dgen, plotdir, eval_specs = prologue(cmdargs)
+    args, model, dgen, plotdir, preset = prologue(cmdargs)
+
+    hist_specs = make_hist_specs(cmdargs, preset)
 
     var_list  = [ 'none' ]
-    stat_list = [ eval_model(args, dgen, model, eval_specs['fom'])[0] ]
+    stat_list = [ eval_model(args, dgen, model, hist_specs)[0] ]
 
     make_perturb_profile(
         slice_var_generator(dgen, cmdargs.smear), var_list, stat_list,
-        args, model, eval_specs, plotdir, 'slice', cmdargs
+        args, model, hist_specs, preset, plotdir, 'slice', cmdargs
     )
 
     make_perturb_profile(
         png2d_var_generator(dgen, cmdargs.smear), var_list, stat_list,
-        args, model, eval_specs, plotdir, 'png2d', cmdargs
+        args, model, hist_specs, preset, plotdir, 'png2d', cmdargs
     )
 
     make_perturb_profile(
         png3d_var_generator(dgen, cmdargs.smear), var_list, stat_list,
-        args, model, eval_specs, plotdir, 'png3d', cmdargs
+        args, model, hist_specs, preset, plotdir, 'png3d', cmdargs
     )
 
 if __name__ == '__main__':

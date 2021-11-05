@@ -13,21 +13,46 @@ from cafplot.plot  import (
 )
 from cafplot.rhist import RHist1D
 
-from lstm_ee.eval.predict  import get_true_energies
-from lstm_ee.presets       import PRESETS_EVAL
-from lstm_ee.utils.eval    import standard_eval_prologue
-from lstm_ee.utils.log     import setup_logging
-from lstm_ee.utils.parsers import add_basic_eval_args,add_concurrency_parser
+from lstm_ee.eval.predict   import get_true_energies
+from lstm_ee.presets        import PRESETS_EVAL
+from lstm_ee.utils.eval     import standard_eval_prologue, parse_binning
+from lstm_ee.utils.log      import setup_logging
+from lstm_ee.utils.parsers  import (
+    add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
+)
+from lstm_ee.plot.plot_spec import PlotSpec
+
+def make_hist_specs(cmdargs, preset):
+    binning = parse_binning(cmdargs, suffix = '_x')
+
+    return {
+        label : PlotSpec(
+            title   = None,
+            label_x = f'True {name} Energy [{preset.units_map[label]}]',
+            label_y = 'Events',
+            **binning
+        )
+        for (label, name) in preset.name_map.items()
+    }
 
 def parse_cmdargs():
-    """Parse command line arguments"""
-    parser = argparse.ArgumentParser("Plot targets")
+    parser = argparse.ArgumentParser("Make True Energy Hist plots")
+
     add_basic_eval_args(parser, PRESETS_EVAL)
     add_concurrency_parser(parser)
+
+    add_hist_binning_parser(
+        parser,
+        default_range_lo = 0,
+        default_range_hi = 5,
+        default_bins     = 100,
+    )
+
     return parser.parse_args()
 
-def plot_energy(data, weights, name, spec, log_scale = False):
+def plot_single_energy_hist(data, weights, name, spec, log_scale = False):
     """Plot single energy distribution."""
+
     f, ax = plt.subplots()
     if log_scale:
         ax.set_yscale('log')
@@ -53,37 +78,39 @@ def plot_energy(data, weights, name, spec, log_scale = False):
 
     return f, ax, rhist
 
+def plot_energy_hists(
+    true_energies, weights, preset, hist_specs, plotdir, ext
+):
+    for label, energy in true_energies.items():
+        for log_scale in [ True, False ]:
+            f, _ax, rhist = plot_single_energy_hist(
+                energy, weights, preset.name_map[label], hist_specs[label],
+                log_scale
+            )
+
+            suffix = 'log' if log_scale else 'linear'
+            save_fig(f, os.path.join(plotdir, f'{label}_{suffix}'), ext)
+
+        np.savetxt(os.path.join(plotdir, f"{label}_hist.txt"), rhist.hist)
+        np.savetxt(os.path.join(plotdir, f"{label}_bins.txt"), rhist.bins_x)
+
 def main():
-    # pylint: disable=missing-function-docstring
     setup_logging()
     cmdargs = parse_cmdargs()
 
-    dgen, _, _, outdir, _, eval_specs = standard_eval_prologue(
-        cmdargs, PRESETS_EVAL
-    )
+    dgen, _args, _model, outdir, _plotdir, preset = \
+        standard_eval_prologue(cmdargs, PRESETS_EVAL)
 
-    plotdir = os.path.join(outdir, 'targets')
+    hist_specs = make_hist_specs(cmdargs, preset)
+    plotdir    = os.path.join(outdir, 'targets')
     os.makedirs(plotdir, exist_ok = True)
 
     true_energies = get_true_energies(dgen)
     weights       = dgen.weights
 
-    for label,energy in true_energies.items():
-        for log_scale in [ True, False ]:
-            f,_,rhist = plot_energy(
-                energy, weights, eval_specs['name_map'][label],
-                eval_specs['hist'][label], log_scale
-            )
-
-            save_fig(
-                f, os.path.join(plotdir, '%s_log(%s)' % (label, log_scale)),
-                cmdargs.ext
-            )
-
-        np.savetxt(os.path.join(plotdir, "%s_hist.txt" % (label)), rhist.hist)
-        np.savetxt(
-            os.path.join(plotdir, "%s_bins.txt" % (label)), rhist.bins_x
-        )
+    plot_energy_hists(
+        true_energies, weights, preset, hist_specs, plotdir, cmdargs.ext
+    )
 
 if __name__ == '__main__':
     main()
