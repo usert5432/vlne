@@ -132,7 +132,9 @@ class EvalConfig:
     def get_evaldir(self, outdir):
         return os.path.join(
             outdir,
-            'eval_d(%s)_p(%s)_%s' % (self.data, self.preset, self.label)
+            'eval_d(%s)_p(%s)_%s' % (
+                self.data or 'same', self.preset, self.label
+            )
         )
 
     @staticmethod
