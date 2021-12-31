@@ -9,14 +9,14 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         'outdir',
-        help    = 'Directory with saved model',
+        help    = 'directory with saved model',
         metavar = 'OUTDIR',
         type    = str,
     )
 
     parser.add_argument(
         '-e', '--ext',
-        help    = 'Plot file extension. Example: pdf',
+        help    = 'plot file extension. Example: pdf',
         default = [ 'png' ],
         dest    = 'ext',
         nargs   = '+',
@@ -25,7 +25,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '-w', '--weights',
-        help    = 'Weights to use during evaluation.',
+        help    = 'weights to use during evaluation.',
         default = 'weight',
         dest    = 'weights',
         type    = str,
@@ -33,7 +33,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '-d', '--data',
-        help    = 'Evaluation dataset',
+        help    = 'evaluation dataset',
         default = None,
         dest    = 'data',
         type    = str,
@@ -41,7 +41,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '-n', '--noise',
-        help    = 'Noise configuration to use during evaluation.',
+        help    = 'noise configuration to use during evaluation.',
         default = 'none',
         dest    = 'noise',
         type    = str,
@@ -49,7 +49,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '-P', '--preset',
-        help     = 'Evaluation preset',
+        help     = 'evaluation preset',
         choices  = list(presets_eval.keys()),
         default  = None,
         dest     = 'preset',
@@ -59,7 +59,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '-s', '--prong-sorter',
-        help     = 'Prong ordering configuration.',
+        help     = 'prong ordering configuration.',
         default  = None,
         dest     = 'prong_sorter',
         type     = str,
@@ -68,7 +68,7 @@ def add_basic_eval_args(parser, presets_eval):
     parser.add_argument(
         '--seed',
         help    =
-            'Seed to initialize PRG for data split into train/test parts',
+            'seed to initialize PRG for data split into train/test parts',
         default = 'same',
         dest    = 'seed',
         type    = str,
@@ -76,7 +76,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '-t', '--test-size',
-        help    = 'Subset size of the dataset to use for evaluation',
+        help    = 'subset size of the dataset to use for evaluation',
         default = 'same',
         dest    = 'test_size',
         type    = str,
@@ -84,7 +84,7 @@ def add_basic_eval_args(parser, presets_eval):
 
     parser.add_argument(
         '--label',
-        help    = 'Evaluation label',
+        help    = 'evaluation label',
         default = None,
         dest    = 'label',
         type    = str,
@@ -95,21 +95,21 @@ def add_concurrency_parser(parser):
 
     parser.add_argument(
         '--cache',
-        help    = 'Use RAM cache',
+        help    = 'use RAM cache',
         action  = 'store_true',
         dest    = 'cache',
     )
 
     parser.add_argument(
         '--disk-cache',
-        help    = 'Use disk based cache',
+        help    = 'use disk based cache',
         action  = 'store_true',
         dest    = 'disk_cache',
     )
 
     parser.add_argument(
         '--workers',
-        help    = 'Number of concurrent workers',
+        help    = 'number of concurrent workers',
         dest    = 'workers',
         default = None,
         type    = int,
@@ -117,7 +117,7 @@ def add_concurrency_parser(parser):
 
     parser.add_argument(
         '--concurrency',
-        help    = 'Type of parallelization',
+        help    = 'type of parallelization',
         dest    = 'concurrency',
         choices = [ 'thread', 'process' ],
         default = None,
@@ -155,7 +155,7 @@ def add_hist_binning_parser(
     )
 
     parser.add_argument(
-        '--bin_edges',
+        '--bin-edges',
         help    = 'bin edges. Overrides bins and range settings',
         default = None,
         dest    = 'bin_edges',
