@@ -3,8 +3,8 @@
 import argparse
 import os
 
-from keras.utils      import plot_model
-from lstm_ee.utils.io import load_model
+from tensorflow.keras.utils import plot_model
+from lstm_ee.utils.io       import load_model
 
 def parse_cmdargs():
     """Parse command line arguments"""
