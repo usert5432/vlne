@@ -1,31 +1,27 @@
-"""Extract tensorflow graph from a `keras` model and export it to a file.
-
-Notes
------
-This is tested only with tensorflow v1. Need to update for TF v2.
-"""
+"""Extract tensorflow graph from a `keras` model and export it to a file"""
 
 import argparse
 import json
 import os
 
-from  keras import backend as K
-
 import tensorflow as tf
-from tensorflow.tools.graph_transforms import TransformGraph
+from tensorflow.compat.v1.keras import backend as K
+
+from tensorflow.python.framework import dtypes, graph_io
+from tensorflow.python.framework import graph_util
+from tensorflow.python.tools     import optimize_for_inference_lib
 
 from lstm_ee.utils.io import load_model
 
-# TODO: verify if this is really needed
+tf.compat.v1.disable_eager_execution()
 K.set_learning_phase(0)
 
-def create_parser():
-    """Create command line argument parser"""
+def parse_cmdargs():
     parser = argparse.ArgumentParser("Convert keras model to TF graph")
 
     parser.add_argument(
         'outdir',
-        help    = 'Directory with saved models',
+        help    = 'directory with saved models',
         metavar = 'OUTDIR',
         type    = str,
     )
@@ -34,20 +30,19 @@ def create_parser():
         '-t', '--text',
         action = 'store_true',
         dest   = 'text_also',
-        help   = 'Save ascii version also',
+        help   = 'save ascii version also',
     )
 
     parser.add_argument(
-        '-r', '--raw',
+        '--optimize',
         action = 'store_true',
-        dest   = 'raw_also',
-        help   = 'Save raw unoptimized model also',
+        dest   = 'optimize',
+        help   = 'optimize graph before saving',
     )
 
-    return parser
+    return parser.parse_args()
 
 def freeze_session(session, output_names):
-    """Freeze tensorflow graph"""
     graph = session.graph
 
     with graph.as_default():
@@ -56,31 +51,32 @@ def freeze_session(session, output_names):
         for node in input_graph_def.node:
             node.device = ""
 
-        frozen_graph = tf.graph_util.convert_variables_to_constants(
+        frozen_graph = graph_util.convert_variables_to_constants(
             session, input_graph_def, output_names
         )
 
         return frozen_graph
 
 def get_optimized_graph(frozen_graph, inputs, outputs):
-    """Optimize tensorflow graph for evaluation"""
+    DEF_DTYPE = dtypes.float32.as_datatype_enum
+    result    = frozen_graph
 
-    trans_list = [
-        'strip_unused_nodes',
-        'remove_nodes(op=Identity, op=CheckNumerics)',
-        'fold_constants(ignore_errors=true)',
-        'fold_batch_norms',
-        'fold_old_batch_norms',
-    ]
+    print(
+        "[WARNING] Running graph optimization. "
+        "Note, that TensorFlow likes to break when using optimized graph."
+    )
 
-    return TransformGraph(frozen_graph, inputs, outputs, trans_list)
+    result = optimize_for_inference_lib.optimize_for_inference(
+        result, inputs, outputs, DEF_DTYPE
+    )
+
+    return result
 
 def save_graph(graph, root, name, text_also = False):
-    """Save tensorflow graph"""
-    tf.train.write_graph(graph, root, name, as_text=False)
+    graph_io.write_graph(graph, root, name, as_text = False)
 
     if text_also:
-        tf.train.write_graph(graph, root, name + ".txt", as_text=True)
+        graph_io.write_graph(graph, root, name + ".txt", as_text = True)
 
 def get_tf_opname_for_layer(model, layer_name, output_op = False):
     """Return tf i/o node name for a layer of keras model"""
@@ -94,20 +90,32 @@ def get_tf_opname_for_layer(model, layer_name, output_op = False):
     else:
         return layer.input.op.name
 
+def set_vars(config_tf, label, var_list):
+    if var_list is None:
+        return
+
+    config_tf[label] = var_list
+
 def create_tf_config(args, model):
     """
     Create evaluation configuration that holds input variables and graph nodes
     """
     config_tf = {}
 
-    config_tf['vars_slice'] = args.vars_input_slice
-    config_tf['vars_png2d'] = args.vars_input_png2d
-    config_tf['vars_png3d'] = args.vars_input_png3d
+    set_vars(config_tf, 'vars_event',        args.vars_input_slice)
+    set_vars(config_tf, 'vars_particle',     args.vars_input_png3d)
+    set_vars(config_tf, 'vars_particle_aux', args.vars_input_png2d)
 
-    config_tf.update({
-        x : get_tf_opname_for_layer(model, x, False) \
-            for x in [ 'input_slice', 'input_png2d', 'input_png3d' ]
-    })
+    INPUTS = [
+        ('input_event',        'input_slice'),
+        ('input_particle',     'input_png3d'),
+        ('input_particle_aux', 'input_png2d'),
+    ]
+
+    for (key, name) in INPUTS:
+        node = get_tf_opname_for_layer(model, name, False)
+        if node is not None:
+            config_tf[key] = node
 
     config_tf.update({
         x : get_tf_opname_for_layer(model, x, True) \
@@ -117,34 +125,31 @@ def create_tf_config(args, model):
     return config_tf
 
 def save_config(config_tf, outdir_tf):
-    """Create evaluation configuration"""
     with open(os.path.join(outdir_tf, "config.json"), "wt") as f:
         json.dump(config_tf, f, indent = 4, sort_keys = True)
 
+def export(config, graph, outdir, text_also):
+    outdir = os.path.join(outdir, "tf")
+    os.makedirs(outdir, exist_ok = True)
+
+    save_config(config, outdir)
+    save_graph(graph, outdir, "model.pb", text_also)
+
 def main():
-    # pylint: disable=missing-function-docstring
-    parser  = create_parser()
-    cmdargs = parser.parse_args()
+    cmdargs = parse_cmdargs()
 
     args, model = load_model(cmdargs.outdir, compile = False)
+    config_tf   = create_tf_config(args, model)
 
-    config_tf = create_tf_config(args, model)
+    inputs  = [ node.op.name for node in model.inputs ]
+    outputs = [ node.op.name for node in model.outputs ]
 
-    inputs  = [node.op.name for node in model.inputs]
-    outputs = [node.op.name for node in model.outputs]
+    graph = freeze_session(K.get_session(), outputs)
 
-    outdir_tf = os.path.join(cmdargs.outdir, "tf")
-    os.makedirs(outdir_tf, exist_ok = True)
+    if cmdargs.optimize:
+        graph = get_optimized_graph(graph, inputs, outputs)
 
-    save_config(config_tf, outdir_tf)
-
-    frozen_graph = freeze_session(K.get_session(), outputs)
-    if cmdargs.raw_also:
-        save_graph(frozen_graph, outdir_tf, "model_raw.pb", cmdargs.text_also)
-
-    optimized_graph = get_optimized_graph(frozen_graph, inputs, outputs)
-    save_graph(optimized_graph, outdir_tf, "model.pb", cmdargs.text_also)
-
+    export(config_tf, graph, cmdargs.outdir, cmdargs.text_also)
 
 if __name__ == '__main__':
     main()
