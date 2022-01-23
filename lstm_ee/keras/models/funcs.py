@@ -1,7 +1,8 @@
 """Functions to construct blocks of layers for `lstm_ee`"""
 
+import tensorflow as tf
 from tensorflow.keras.layers import (
-    Activation, Add, BatchNormalization, Bidirectional,
+    Activation, Add, BatchNormalization, Bidirectional, LayerNormalization,
     Dense, Dropout, Input, LSTM, Masking, TimeDistributed
 )
 
@@ -10,13 +11,18 @@ from .layer_norm import SimpleNorm
 
 def get_normalization_layer(norm, **kwargs):
     if norm is None:
-        return None
+        return tf.identity
 
     if norm == 'batch':
         return BatchNormalization(**kwargs)
 
+    if norm == 'layer':
+        return LayerNormalization(**kwargs)
+
     if norm == 'simple':
         return SimpleNorm(**kwargs)
+
+    raise ValueError("Unknown normalization '%s'" % (norm))
 
 def modify_layer(layer, name, norm = None, dropout = None):
     """Add BatchNorm and/or Dropout on top of `layer`"""
