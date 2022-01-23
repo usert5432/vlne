@@ -11,4 +11,9 @@ disable=
     too-few-public-methods,
     too-many-locals,
     superfluous-parens,
+    missing-function-docstring,
+    missing-class-docstring,
+    missing-module-docstring,
 
+[TYPECHECK]
+ignored-modules=LazyLoader
