@@ -4,9 +4,10 @@ Functions to make binstat plots of means with error bars.
 
 import matplotlib.pyplot as plt
 
-from lstm_ee.eval.binned_stats import calc_binned_stats, calc_stat
 from cafplot.plot.nphist import plot_nphist1d_base, plot_nphist1d_error
 from cafplot.plot import save_fig
+
+from lstm_ee.eval.binned_stats import calc_binned_stats, calc_stat
 
 def plot_hairy_mean_binstat_single(ax, x, y, weights, bins, color, label, err):
     """Add binstat plot of mean with error bars to axes `ax`"""

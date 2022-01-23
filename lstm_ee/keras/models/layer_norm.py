@@ -3,7 +3,7 @@ from keras.engine.base_layer import Layer, InputSpec
 
 class SimpleNorm(Layer):
     """Layer that standartizes data by using moving mean/variance
-        
+
     Parameters
     ----------
     momentum : float
@@ -18,6 +18,10 @@ class SimpleNorm(Layer):
 
         self._momentum = momentum
         self._epsilon  = epsilon
+
+        self.moving_mean = None
+        self.moving_var  = None
+
         self.supports_masking = True
 
     def build(self, input_shape):
@@ -59,13 +63,17 @@ class SimpleNorm(Layer):
 
         self.add_update(
             [
-                K.moving_average_update(self.moving_mean, mean, self.momentum),
-                K.moving_average_update(self.moving_var,  std,  self.momentum),
+                K.moving_average_update(
+                    self.moving_mean, mean, self._momentum
+                ),
+                K.moving_average_update(self.moving_var, var, self._momentum),
             ],
             inputs
         )
 
     def call(self, inputs, training = None):
+        # pylint: disable=arguments-differ
+
         # inputs : (N, n_features)
         if training:
             self.update_moving_averages(inputs)
