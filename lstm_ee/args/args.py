@@ -111,7 +111,7 @@ class Args:
         disk_cache   = False,
         concurrency  = False,
         save_best    = True,
-        workers      = 0,
+        workers      = None,
         log_level    = 'INFO',
     ):
         self.config       = config
