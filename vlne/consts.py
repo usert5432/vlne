@@ -11,13 +11,13 @@ LABEL_TOTAL     = 'total'
 LABEL_PRIMARY   = 'primary'
 LABEL_SECONDARY = 'secondary'
 
-if 'LSTM_EE_DATADIR' in os.environ:
-    ROOT_DATADIR = os.environ['LSTM_EE_DATADIR']
+if 'VLNE_DATADIR' in os.environ:
+    ROOT_DATADIR = os.environ['VLNE_DATADIR']
 else:
     ROOT_DATADIR = '/'
 
-if 'LSTM_EE_OUTDIR' in os.environ:
-    ROOT_OUTDIR = os.environ['LSTM_EE_OUTDIR']
+if 'VLNE_OUTDIR' in os.environ:
+    ROOT_OUTDIR = os.environ['VLNE_OUTDIR']
 else:
     ROOT_OUTDIR = '/'
 

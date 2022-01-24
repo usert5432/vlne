@@ -23,7 +23,7 @@ class Config:
     batch_size : int
         Training batch size.
     dataset : str
-        Dataset path inside "${LSTM_EE_DATADIR}".
+        Dataset path inside "${VLNE_DATADIR}".
     early_stop : dict or None, optional
         Early stopping configuration.
         C.f. `vlne.train.setup.get_early_stop` for available configurations.
