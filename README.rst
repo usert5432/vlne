@@ -1,53 +1,51 @@
-lstm_ee
-=======
-Package to train NOvA/DUNE RNN Energy Estimators.
+vlne
+====
+
+Package to train Deep Learning neutrino energy estimators operating on
+information particle information.
 
 Overview
 --------
-This package is designed to simplify (re-)training of the energy estimators for
-the NOvA/DUNE experiments that are based on recurrent neural networks.  It
-contains an extensive library of helper functions and a number of scripts to
-train various kinds of energy estimators and evaluate them. Please refer to
-`Documentation`_ for the details.
+This package is designed to simplify training of the energy estimators for
+neutrino experiments. It contains an extensive library of helper functions and
+a number of scripts to train various kinds of energy estimators and evaluate
+them. Please refer to `Documentation`_ for the details.
 
 This package is inspired by the `rnnNeutrinoEnergyEstimator <original_>`_
 which laid the groundwork for the LSTM energy estimator development.
 
 Installation
 ------------
-`lstm_ee` package is intended for developers. Therefore, it is recommended to
+`vlne` package is intended for developers. Therefore, it is recommended to
 install the live version of the package, for example:
 
 1. Git clone this repository:
 
 .. code-block:: bash
 
-   git clone https://github.com/usert5432/lstm_ee
+   git clone https://github.com/usert5432/vlne
 
-2. Add cloned repo to the ``PYTHONPATH`` environment variable.
+2. Setup `vlne` package, by running
 
 .. code-block:: bash
 
-   export PYTHONPATH="FULL_PATH_TO_CLONED_REPO:${PYTHONPATH}"
+   python setup.py develop --user
 
-You may want to add the line above to your ``~/.bashrc``.
+in the `vlne` directory.
 
-For the proper operation `lstm_ee` requires several other python packages to
-be available on your system, see `Requirements`_.
-
-If you are running `lstm_ee` for the first time it might be useful to run
+If you are running `vlne` for the first time it might be useful to run
 its test suite to make sure that the package is not broken:
 
 .. code-block:: bash
 
-    python -m unittest tests.run_tests.suite
+   python -m unittest tests.run_tests.suite
 
 
 Requirements
 ------------
 
-`lstm_ee` package is written in python v3 and won't work with python v2.
-`lstm_ee` depends on the following packages:
+`vlne` package is written in python v3 and won't work with python v2.
+`vlne` depends on the following packages:
 
 * ``keras``   -- for training neural networks.
 * ``pandas``, ``numpy`` -- for handling data.
@@ -62,7 +60,7 @@ them with ``pip`` by running
 
    pip install --user -r requirements.txt
 
-Also, `lstm_ee` has a number of optional dependencies:
+Also, `vlne` has a number of optional dependencies:
 
 * ``tensorflow`` -- for exporting ``keras`` models into protobuf format that
   NOvASoft expects. Note that only ``tensorflow`` v1 is supported currently.
@@ -74,8 +72,8 @@ Also, `lstm_ee` has a number of optional dependencies:
 Documentation
 -------------
 
-`lstm_ee` package comes with several layers of documentation. The basic
-overview of the `lstm_ee` workings and examples of usage are documented in
+`vlne` package comes with several layers of documentation. The basic
+overview of the `vlne` workings and examples of usage are documented in
 sphinx format. You can find this documentation by the following
 `link <prebuilt_doc_>`_ (requires nova credentials).
 
@@ -90,9 +88,9 @@ installed):
 It will build all available documentation, which can be viewed with a web
 browser by pointing it to the ``build/html/index.html`` file.
 
-In addition to the sphinx documentation the `lstm_ee` code is covered by a
+In addition to the sphinx documentation the `vlne` code is covered by a
 numpy like docstrings. Please refer to the docstrings and the source code for
-the details about inner `lstm_ee` workings.
+the details about inner `vlne` workings.
 
 .. _prebuilt_doc: https://nova-docdb.fnal.gov/cgi-bin/private/ShowDocument?docid=45821
 .. _original: https://github.com/AlexanderRadovic/rnnNeutrinoEnergyEstimator
