@@ -66,5 +66,4 @@ autosectionlabel_prefix_document = True
 spelling_lang  = 'en_US'
 pygments_style = 'sphinx'
 
-
-
+master_doc = 'index'
