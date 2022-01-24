@@ -2,11 +2,11 @@
 
 import unittest
 
-from lstm_ee.data.data_generator.funcs.weights  import (
+from vlne.data.data_generator.funcs.weights  import (
     calc_flat_whist, flat_weights
 )
 
-from lstm_ee.data.data_loader.dict_loader import DictLoader
+from vlne.data.data_loader.dict_loader import DictLoader
 
 from ..data import nan_equal
 

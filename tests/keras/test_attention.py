@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from lstm_ee.keras.models.models_atten import (
+from vlne.keras.models.models_atten import (
     DotAttention, slice_trasnpose, unslice_transpose
 )
 

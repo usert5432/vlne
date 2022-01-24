@@ -7,7 +7,7 @@ import tempfile
 import tables
 import numpy as np
 
-from lstm_ee.data.data_loader.hdf_loader import HDFLoader
+from vlne.data.data_loader.hdf_loader import HDFLoader
 from .tests_data_loader_base import TestsDataLoaderBase
 
 def create_hdf_data_bytes(fname, data):

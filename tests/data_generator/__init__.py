@@ -1,1 +1,1 @@
-"""Various `lstm_ee.data.data_generator` tests"""
+"""Various `vlne.data.data_generator` tests"""

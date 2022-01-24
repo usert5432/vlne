@@ -2,8 +2,8 @@
 
 import unittest
 
-from lstm_ee.data.data_loader.dict_loader import DictLoader
-from lstm_ee.data.data_loader.data_slice  import DataSlice
+from vlne.data.data_loader.dict_loader import DictLoader
+from vlne.data.data_loader.data_slice  import DataSlice
 
 from .tests_data_loader_base import FuncsDataLoaderBase
 

@@ -3,7 +3,7 @@
 import unittest
 import numpy as np
 
-from lstm_ee.data.data_generator.data_noise import DataNoise
+from vlne.data.data_generator.data_noise import DataNoise
 
 from .tests_data_generator_base import (
     DataGenerator, DictLoader, TestsDataGeneratorBase

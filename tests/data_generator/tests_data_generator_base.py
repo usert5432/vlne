@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from lstm_ee.data.data_loader.dict_loader       import DictLoader
-from lstm_ee.data.data_generator.data_generator import DataGenerator
+from vlne.data.data_loader.dict_loader       import DictLoader
+from vlne.data.data_generator.data_generator import DataGenerator
 from ..data import (
     TEST_DATA, TEST_INPUT_VARS_SLICE, TEST_INPUT_VARS_PNG3D,
     TEST_INPUT_VARS_PNG2D, TEST_TARGET_VAR_TOTAL, TEST_TARGET_VAR_PRIMARY,

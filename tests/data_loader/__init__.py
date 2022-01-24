@@ -1,2 +1,2 @@
-"""Various `lstm_ee.data.data_loader` tests"""
+"""Various `vlne.data.data_loader` tests"""
 

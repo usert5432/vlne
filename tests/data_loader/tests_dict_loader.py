@@ -2,7 +2,7 @@
 
 import unittest
 
-from lstm_ee.data.data_loader.dict_loader import DictLoader
+from vlne.data.data_loader.dict_loader import DictLoader
 from .tests_data_loader_base import TestsDataLoaderBase
 
 class TestsDictLoader(TestsDataLoaderBase, unittest.TestCase):

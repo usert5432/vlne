@@ -3,7 +3,7 @@
 import io
 import unittest
 
-from lstm_ee.data.data_loader.csv_loader import CSVLoader
+from vlne.data.data_loader.csv_loader import CSVLoader
 
 from .tests_data_loader_base import TestsDataLoaderBase
 

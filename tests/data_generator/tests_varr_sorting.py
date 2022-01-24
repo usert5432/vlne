@@ -3,7 +3,7 @@
 import unittest
 import numpy as np
 
-from lstm_ee.data.data_generator import DataProngSorter
+from vlne.data.data_generator import DataProngSorter
 
 from .tests_data_generator_base import (
     DictLoader, DataGenerator, TestsDataGeneratorBase

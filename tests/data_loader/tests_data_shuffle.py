@@ -3,8 +3,8 @@
 import unittest
 import numpy as np
 
-from lstm_ee.data.data_loader.dict_loader  import DictLoader
-from lstm_ee.data.data_loader.data_shuffle import DataShuffle
+from vlne.data.data_loader.dict_loader  import DictLoader
+from vlne.data.data_loader.data_shuffle import DataShuffle
 
 from .tests_data_loader_base import FuncsDataLoaderBase
 
