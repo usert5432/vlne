@@ -7,15 +7,15 @@ def readme():
         return f.read()
 
 setuptools.setup(
-    name             = 'lstm_ee',
-    version          = '0.1.0',
+    name             = 'vlne',
+    version          = '0.3.0-alpha',
     author           = 'Dmitrii Torbunov',
     author_email     = 'torbu001@umn.edu',
     classifiers      = [
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    description      = 'Package to train NOvA LSTM Energy Estimators',
+    description      = 'Package to train neutrino energy estimators',
     install_requires = [
         'cafplot',
         'keras',
@@ -28,6 +28,6 @@ setuptools.setup(
     packages         = setuptools.find_packages(
         exclude = [ 'tests', 'tests.*' ]
     ),
-    url              = 'https://github.com/usert5432/lstm_ee',
+    url              = 'https://github.com/usert5432/vlne',
 )
 
