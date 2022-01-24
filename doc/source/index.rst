@@ -1,14 +1,14 @@
 Preface
 =======
 
-`lstm_ee` is a package to train NOvA/DUNE RNN Energy Estimators.
+`vlne` is a package to train NOvA/DUNE RNN Energy Estimators.
 
-If you just found `lstm_ee` and wondering where to begin, then take a look at
+If you just found `vlne` and wondering where to begin, then take a look at
 the tutorial :doc:`tutorials/mprod5/index`. This tutorial will walk you though
 the steps needed to train NOvA LSTM Energy Estimator, evaluate it and use with
 ``NOvASoft``.
 
-lstm_ee documentation
+vlne documentation
 =====================
 
 .. toctree::

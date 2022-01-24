@@ -25,7 +25,7 @@ quick overview `here <slurm_overview_>`_. Example below is going to show
 how to train network interactively with ``slurm``. It assumes that you have
 already :ref:`installed <intro:Installation>` and
 :ref:`setup <manuals/directory_structure:Directory Structure Setup>` the
-`lstm_ee` package.
+`vlne` package.
 
 Interactive training of MiniProd5 Network on Wilson Cluster
 -----------------------------------------------------------
@@ -52,7 +52,7 @@ lasting *24* hours.
 
         squeue -p gpu
 
-Next, the software that `lstm_ee` requires for training is packaged in a
+Next, the software that `vlne` requires for training is packaged in a
 ``Singularity`` container. You would need to load that container before the
 training can begin:
 

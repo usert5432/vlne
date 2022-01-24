@@ -1,9 +1,9 @@
 Using Trained Networks with NOvASoft
 ====================================
 
-So, you have trained trained your `lstm_ee` network and hopefully satisfied
+So, you have trained trained your `vlne` network and hopefully satisfied
 with its performance. Next, we can try using it in the ``NOvASoft``.
-``NOvASoft`` support using `lstm_ee` networks at both NOvA-*art* and ``CAFAna``
+``NOvASoft`` support using `vlne` networks at both NOvA-*art* and ``CAFAna``
 levels. However, before the network can be used with ``NOvASoft`` it needs to
 be converted from the ``keras`` format into the ``protobuf`` format that
 ``NOvASoft`` expects.
@@ -11,7 +11,7 @@ be converted from the ``keras`` format into the ``protobuf`` format that
 Converting keras Network into Protobuf Format
 ---------------------------------------------
 
-In order to convert the trained network into the protobuf format `lstm_ee`
+In order to convert the trained network into the protobuf format `vlne`
 comes with a script ``scripts/tf/export_model.py``. For the proper operation
 requires ``tensorflow`` version 1 package to be available on your system.
 The usage of this script is simple:
@@ -22,7 +22,7 @@ The usage of this script is simple:
 
 This script should produce a directory ``NETWORK_PATH/tf`` with two files:
 
-1. ``model.pb`` -- `lstm_ee` network saved in protobuf format.
+1. ``model.pb`` -- `vlne` network saved in protobuf format.
    This network is optimized for evaluation.
 2. ``config.json`` -- network configuration that includes names of input
    variables that it uses, and names of input/output graph nodes.
@@ -53,7 +53,7 @@ Using Network at CAFAna Level
 -----------------------------
 
 ``NOvASoft`` comes with a number of helpers to allow simple evaluation of
-`lstm_ee` networks at ``CAFAna`` level. In order to use `lstm_ee` networks
+`vlne` networks at ``CAFAna`` level. In order to use `vlne` networks
 at ``CAFAna`` level, first you would have to include the header with relevant
 definitions in your ``CAFAna`` script:
 

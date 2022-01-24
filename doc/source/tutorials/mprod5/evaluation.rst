@@ -2,7 +2,7 @@ Evaluation of Trained Networks
 ==============================
 
 Now that you have trained your LSTM energy estimator you probably want to know
-how it performs. To assist you with this task `lstm_ee` package comes with a
+how it performs. To assist you with this task `vlne` package comes with a
 number of scripts. Here a few of them that might be interesting:
 
 1. ``scripts/eval/eval_model.py`` -- script to plot 1D energy resolution
@@ -44,7 +44,7 @@ where **NETWORK_PATH** is the path with saved network
 
 ::
 
-    "${LSTM_EE_OUTDIR}/numu/mprod5/final/fd_fhc/model_hash(HASHSTRING)"
+    "${VLNE_OUTDIR}/numu/mprod5/final/fd_fhc/model_hash(HASHSTRING)"
 
 and we have used preset *numu_7GeV* since the dataset that we obtained
 in :doc:`data` contains events with energies from 0 to 7 GeV.  When the script
@@ -74,7 +74,7 @@ produce additional plots.
 
 You may also be interested in advanced evaluation
 scripts found in  ``eval``, ``studies``, ``model``, ``plot`` subdirectories
-of the `lstm_ee` ``script`` directory. Please refer to their usage summary for
+of the `vlne` ``script`` directory. Please refer to their usage summary for
 the details.
 
 

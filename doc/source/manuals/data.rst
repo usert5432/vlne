@@ -1,22 +1,22 @@
 Data Handling
 =============
 
-This page will try to document data formats that `lstm_ee` employs, data
+This page will try to document data formats that `vlne` employs, data
 generation performance and ways to improve it.
 
 Data Formats
 ------------
 
-Currently, `lstm_ee` supports reading data from ``csv`` and ``hdf5`` files.
+Currently, `vlne` supports reading data from ``csv`` and ``hdf5`` files.
 
 CSV Files
 ^^^^^^^^^
 
-`lstm_ee` package support reading data from the ``csv`` files. It supports
+`vlne` package support reading data from the ``csv`` files. It supports
 reading both plain files and compressed (*gzip*, *xz*, etc) files with
 ``pandas.read_csv``.
 
-Since `lstm_ee` relies on a prong level variables, that are essentially a
+Since `vlne` relies on a prong level variables, that are essentially a
 variable length arrays, it needs to store variable length arrays in the ``csv``
 files. It was decided to store a variable length arrays serialized as a comma
 separated string of values in a ``csv``. So, for example the following
@@ -45,7 +45,7 @@ for ``pandas.DataFrame``, e.g. if your ``csv`` file has size around 10G, then
 the loaded ``pandas.DataFrame`` may occupy up to 40G in RAM.
 
 .. note::
-    `lstm_ee` likely needs a custom ``csv`` file parser to avoid enormous
+    `vlne` likely needs a custom ``csv`` file parser to avoid enormous
     ``pandas`` memory overhead.
 
 .. note::
@@ -56,7 +56,7 @@ the loaded ``pandas.DataFrame`` may occupy up to 40G in RAM.
 HDF5 Files
 ^^^^^^^^^^
 
-`lstm_ee` also supports reading data from the ``hdf5`` files. However, the
+`vlne` also supports reading data from the ``hdf5`` files. However, the
 ``hdf5`` files are expected to have a certain structure. Namely, all data
 arrays should be stored in the root of the file, one array per variable.
 Prong variables should be stored as arrays of variable length arrays.
@@ -80,8 +80,8 @@ file should have the same shape.
 
 .. note::
     This structure differs from a structure of ``hdf5`` files that NOvA uses.
-    NOvA ``hdf5`` files are not supported in `lstm_ee`. The author of `lstm_ee`
-    package has an experimental converter from NOvA ``hdf5`` to `lstm_ee`
+    NOvA ``hdf5`` files are not supported in `vlne`. The author of `vlne`
+    package has an experimental converter from NOvA ``hdf5`` to `vlne`
     ``hdf5`` files, but it is a mess :(
 
 You can convert a ``csv`` file to an ``hdf5`` file by using script
@@ -95,7 +95,7 @@ variable length arrays. This gives a performance advantage. ``hdf5`` files
 also do not have to be loaded into RAM, before one can work with them.
 
 On the downside, ``hdf5`` datasets have terrible random access performance.
-In its current implementation `lstm_ee` shuffles dataset indices before
+In its current implementation `vlne` shuffles dataset indices before
 separating them into training/validation parts. Loading data with shuffled
 indices takes forever.
 
@@ -129,14 +129,14 @@ of variable length arrays into a single fixed size ``numpy.ndarray``.
 
     ::
 
-        lstm_ee.data.data_generator.funcs.funcs_varr.join_varr_arrays
+        vlne.data.data_generator.funcs.funcs_varr.join_varr_arrays
 
     Its partially optimized cython implementation (2.8 times faster than python
     version) is here
 
     ::
 
-        lstm_ee.data.data_generator.funcs.funcs_varr_opt.c_join_varr_arrays
+        vlne.data.data_generator.funcs.funcs_varr_opt.c_join_varr_arrays
 
     but additional optimizations are possible
 
@@ -149,7 +149,7 @@ of variable length arrays into a single fixed size ``numpy.ndarray``.
 Caches and Multiprocessing
 --------------------------
 
-The slow generation of data batches may significantly impact `lstm_ee` training
+The slow generation of data batches may significantly impact `vlne` training
 and evaluation speeds. There are a few way to improve the data generation
 performance:
 
@@ -163,7 +163,7 @@ Data Caches
 
 Since during the training of neural network the same batch of data is reused
 multiple times, the simplest way to speed up the training would be to cache
-generated data batches. `lstm_ee` package supports two kinds of caches -- RAM
+generated data batches. `vlne` package supports two kinds of caches -- RAM
 based cache and Disk based cache.
 
 The RAM based cache stores all generated data batches in RAM. This creates
@@ -184,12 +184,12 @@ Concurrent Data Generation
 There are two ways to exploit concurrency for data generation. First, is to use
 builtin parallelization support in ``keras``. This works fine when it works,
 but ``keras`` support of parallel data generation is extremely buggy.
-Another way to use concurrency for data generation is to rely on `lstm_ee`
+Another way to use concurrency for data generation is to rely on `vlne`
 routines to precompute and cache data batches in parallel.
 
 In other words, if your ``keras`` version is able to handle parallel data
 generation without issues, then you would probably want to use builtin
-``keras`` concurrency. Otherwise, you would have to fall back to the `lstm_ee`
+``keras`` concurrency. Otherwise, you would have to fall back to the `vlne`
 way.
 
 To activate a concurrent data generation you would need to set ``workers``
@@ -200,7 +200,7 @@ concurrency or *process* based concurrency.
 
 By default the ``keras`` builtin parallelization will be used. However, if you
 also activate the RAM based cache with ``cache`` training option then the
-`lstm_ee` concurrency will be used instead.
+`vlne` concurrency will be used instead.
 
 .. note::
     The tread based concurrency model is largely useless, since python's GIL

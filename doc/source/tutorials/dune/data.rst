@@ -42,9 +42,9 @@ merge multiple extracted *csv* files into one.
 Merging Job Output Files
 ------------------------
 
-The `lstm_ee` package provides a bash script called ``merge_csv.sh`` that can
+The `vlne` package provides a bash script called ``merge_csv.sh`` that can
 be used to merge multiple csv files into one. You can find this script in the
-``scripts/data`` directory of the `lstm_ee` package. In addition to merging
+``scripts/data`` directory of the `vlne` package. In addition to merging
 the output files together it will compress the result with the *xz* compressor.
 
 In order to use ``merge_csv.sh`` to merge job output files you may run the
@@ -55,5 +55,5 @@ following command:
    bash merge_csv.sh MERGED_FILE_NAME.csv.xz "${OUTDIR}"/*/*.csv
 
 After ``merge_csv.sh`` has finished running you can use the resulting file
-``MERGED_FILE_NAME.csv.xz`` for training `lstm_ee` networks.
+``MERGED_FILE_NAME.csv.xz`` for training `vlne` networks.
 

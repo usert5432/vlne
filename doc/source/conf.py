@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'lstm_ee'
+project = 'vlne'
 copyright = '2020-2021, Dmitrii Torbunov'
 author = 'Dmitrii Torbunov'
 
@@ -60,7 +60,7 @@ html_theme = 'nature'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-#import lstm_ee
+#import vlne
 
 autosectionlabel_prefix_document = True
 spelling_lang  = 'en_US'
