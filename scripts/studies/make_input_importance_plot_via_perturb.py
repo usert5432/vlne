@@ -17,17 +17,17 @@ import os
 
 import pandas as pd
 
-from lstm_ee.eval.eval           import eval_model
-from lstm_ee.data.data_generator import DataSmear
-from lstm_ee.plot.profile        import plot_profile
-from lstm_ee.presets             import PRESETS_EVAL
-from lstm_ee.utils               import setup_logging
-from lstm_ee.utils.eval          import standard_eval_prologue, parse_binning
-from lstm_ee.utils.parsers       import (
+from vlne.eval.eval           import eval_model
+from vlne.data.data_generator import DataSmear
+from vlne.plot.profile        import plot_profile
+from vlne.presets             import PRESETS_EVAL
+from vlne.utils               import setup_logging
+from vlne.utils.eval          import standard_eval_prologue, parse_binning
+from vlne.utils.parsers       import (
     add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
 )
-from lstm_ee.data.data_generator.keras_sequence import KerasSequence
-from lstm_ee.plot.plot_spec import PlotSpec
+from vlne.data.data_generator.keras_sequence import KerasSequence
+from vlne.plot.plot_spec import PlotSpec
 
 def make_hist_specs(cmdargs, preset):
     binning = parse_binning(cmdargs, suffix = '_x')

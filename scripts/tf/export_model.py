@@ -11,7 +11,7 @@ from tensorflow.python.framework import dtypes, graph_io
 from tensorflow.python.framework import graph_util
 from tensorflow.python.tools     import optimize_for_inference_lib
 
-from lstm_ee.utils.io import load_model
+from vlne.utils.io import load_model
 
 tf.compat.v1.disable_eager_execution()
 K.set_learning_phase(0)

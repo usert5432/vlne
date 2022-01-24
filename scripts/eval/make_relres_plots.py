@@ -3,17 +3,17 @@
 import argparse
 import os
 
-from lstm_ee.presets       import PRESETS_EVAL
-from lstm_ee.plot.aux      import plot_rel_res_vs_true
-from lstm_ee.utils.eval    import standard_eval_prologue, parse_binning
-from lstm_ee.utils.log     import setup_logging
-from lstm_ee.utils.parsers import (
+from vlne.presets       import PRESETS_EVAL
+from vlne.plot.aux      import plot_rel_res_vs_true
+from vlne.utils.eval    import standard_eval_prologue, parse_binning
+from vlne.utils.log     import setup_logging
+from vlne.utils.parsers import (
     add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
 )
-from lstm_ee.eval.predict  import (
+from vlne.eval.predict  import (
     get_true_energies, get_base_energies, predict_energies
 )
-from lstm_ee.plot.plot_spec import PlotSpec
+from vlne.plot.plot_spec import PlotSpec
 
 def make_plot_spec(name, unit, **kwargs):
     return PlotSpec(

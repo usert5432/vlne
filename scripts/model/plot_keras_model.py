@@ -4,7 +4,7 @@ import argparse
 import os
 
 from tensorflow.keras.utils import plot_model
-from lstm_ee.utils.io       import load_model
+from vlne.utils.io       import load_model
 
 def parse_cmdargs():
     """Parse command line arguments"""

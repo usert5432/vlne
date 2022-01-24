@@ -1,4 +1,4 @@
-"""Convert custom CSV file into HDF file for `lstm_ee` training"""
+"""Convert custom CSV file into HDF file for `vlne` training"""
 
 import argparse
 import warnings
@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 import tables
 
-from lstm_ee.data.data_loader import CSVLoader
+from vlne.data.data_loader import CSVLoader
 
 def create_parser():
     """Create command line argument parser"""

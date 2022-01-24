@@ -5,7 +5,7 @@ import os
 
 import pandas as pd
 
-from lstm_ee.plot.history import plot_train_val_history
+from vlne.plot.history import plot_train_val_history
 
 def load_train_log(savedir):
     """Load training history"""

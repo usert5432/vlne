@@ -13,14 +13,14 @@ from cafplot.plot  import (
 )
 from cafplot.rhist import RHist1D
 
-from lstm_ee.eval.predict   import get_true_energies
-from lstm_ee.presets        import PRESETS_EVAL
-from lstm_ee.utils.eval     import standard_eval_prologue, parse_binning
-from lstm_ee.utils.log      import setup_logging
-from lstm_ee.utils.parsers  import (
+from vlne.eval.predict   import get_true_energies
+from vlne.presets        import PRESETS_EVAL
+from vlne.utils.eval     import standard_eval_prologue, parse_binning
+from vlne.utils.log      import setup_logging
+from vlne.utils.parsers  import (
     add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
 )
-from lstm_ee.plot.plot_spec import PlotSpec
+from vlne.plot.plot_spec import PlotSpec
 
 def make_hist_specs(cmdargs, preset):
     binning = parse_binning(cmdargs, suffix = '_x')

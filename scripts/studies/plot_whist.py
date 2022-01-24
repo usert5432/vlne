@@ -8,12 +8,12 @@ import numpy as np
 
 from cafplot.plot  import plot_nphist1d_base, save_fig
 
-from lstm_ee.args        import Args
-from lstm_ee.data        import load_data
-from lstm_ee.utils.eval  import EvalConfig, make_eval_outdir, make_plotdir
-from lstm_ee.utils.log   import setup_logging
+from vlne.args        import Args
+from vlne.data        import load_data
+from vlne.utils.eval  import EvalConfig, make_eval_outdir, make_plotdir
+from vlne.utils.log   import setup_logging
 
-from lstm_ee.data.data_generator.funcs.weights import calc_flat_whist
+from vlne.data.data_generator.funcs.weights import calc_flat_whist
 
 def parse_cmdargs():
     """Parse command line arguments"""

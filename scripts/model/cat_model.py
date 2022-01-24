@@ -1,7 +1,7 @@
 """Pretty Print training configuration and model structure"""
 
 import argparse
-from lstm_ee.utils.io import load_model
+from vlne.utils.io import load_model
 
 def parse_cmdargs():
     """Parse command line arguments"""

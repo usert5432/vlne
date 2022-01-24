@@ -5,7 +5,7 @@ import json
 import os
 
 import pandas as pd
-from lstm_ee.args import Args
+from vlne.args import Args
 
 def parse_cmdargs():
     # pylint: disable=missing-function-docstring

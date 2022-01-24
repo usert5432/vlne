@@ -4,8 +4,8 @@ import argparse
 import os
 import pandas as pd
 
-from lstm_ee.presets      import PRESETS_EVAL
-from lstm_ee.plot.profile import plot_profile
+from vlne.presets      import PRESETS_EVAL
+from vlne.plot.profile import plot_profile
 
 def parse_cmdargs():
     # pylint: disable=missing-function-docstring

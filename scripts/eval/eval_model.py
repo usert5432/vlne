@@ -1,15 +1,15 @@
 import argparse
 import os
 
-from lstm_ee.presets       import PRESETS_EVAL
-from lstm_ee.utils.log     import setup_logging
-from lstm_ee.utils.parsers import (
+from vlne.presets       import PRESETS_EVAL
+from vlne.utils.log     import setup_logging
+from vlne.utils.parsers import (
     add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
 )
-from lstm_ee.utils.eval     import standard_eval_prologue, parse_binning
-from lstm_ee.eval.eval      import evaluate
-from lstm_ee.plot.fom       import plot_fom
-from lstm_ee.plot.plot_spec import PlotSpec
+from vlne.utils.eval     import standard_eval_prologue, parse_binning
+from vlne.eval.eval      import evaluate
+from vlne.plot.fom       import plot_fom
+from vlne.plot.plot_spec import PlotSpec
 
 def make_hist_specs(cmdargs, preset):
     binning = parse_binning(cmdargs, suffix = '_x')

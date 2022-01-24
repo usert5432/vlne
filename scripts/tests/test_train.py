@@ -3,11 +3,11 @@
 import os
 import logging
 
-from lstm_ee.consts  import ROOT_OUTDIR
-from lstm_ee.args    import join_dicts
-from lstm_ee.presets import PRESETS_TRAIN
-from lstm_ee.train   import create_and_train_model
-from lstm_ee.utils   import setup_logging, parse_concurrency_cmdargs
+from vlne.consts  import ROOT_OUTDIR
+from vlne.args    import join_dicts
+from vlne.presets import PRESETS_TRAIN
+from vlne.train   import create_and_train_model
+from vlne.utils   import setup_logging, parse_concurrency_cmdargs
 
 config = join_dicts(
     PRESETS_TRAIN['numu_v3'],

@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from cafplot.plot          import save_fig
-from lstm_ee.consts        import LABEL_TOTAL, LABEL_PRIMARY
-from lstm_ee.data          import load_data
-from lstm_ee.eval.predict  import predict_energies
-from lstm_ee.utils.eval    import modify_concurrency_args
-from lstm_ee.utils.io      import load_model
-from lstm_ee.utils.log     import setup_logging
-from lstm_ee.utils.parsers import add_concurrency_parser
+from vlne.consts        import LABEL_TOTAL, LABEL_PRIMARY
+from vlne.data          import load_data
+from vlne.eval.predict  import predict_energies
+from vlne.utils.eval    import modify_concurrency_args
+from vlne.utils.io      import load_model
+from vlne.utils.log     import setup_logging
+from vlne.utils.parsers import add_concurrency_parser
 
 LABELS = [ LABEL_PRIMARY, LABEL_TOTAL ]
 

@@ -2,11 +2,11 @@
 
 import os
 
-from lstm_ee.args    import join_dicts
-from lstm_ee.consts  import ROOT_OUTDIR
-from lstm_ee.presets import PRESETS_TRAIN
-from lstm_ee.train   import create_and_train_model
-from lstm_ee.utils   import parse_concurrency_cmdargs, setup_logging
+from vlne.args    import join_dicts
+from vlne.consts  import ROOT_OUTDIR
+from vlne.presets import PRESETS_TRAIN
+from vlne.train   import create_and_train_model
+from vlne.utils   import parse_concurrency_cmdargs, setup_logging
 
 config = join_dicts(
     PRESETS_TRAIN['numu_v3'],
@@ -20,7 +20,7 @@ config = join_dicts(
         #'vars_target_primary',
         'dataset'      : (
             'numu/mprod5/nd_fhc'
-            '/dataset_lstm_ee_nd_fhc_nonswap_loose_cut.csv.xz'
+            '/dataset_vlne_nd_fhc_nonswap_loose_cut.csv.xz'
         ),
         'early_stop'   : {
             'name'   : 'standard',
