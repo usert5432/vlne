@@ -47,7 +47,9 @@ Requirements
 `vlne` package is written in python v3 and won't work with python v2.
 `vlne` depends on the following packages:
 
-* ``keras``   -- for training neural networks.
+* ``tensorflow`` -- for training of neural networks.
+    TensorFlow v2.6 and above are tested. Support of lower TensorFlow is not
+    guaranteed.
 * ``pandas``, ``numpy`` -- for handling data.
 * ``cython``  -- for compiling optimized data handling functions
 * ``scipy``   -- for fitting curves.
@@ -61,9 +63,6 @@ them with ``pip`` by running
    pip install --user -r requirements.txt
 
 Also, `vlne` has a number of optional dependencies:
-
-* ``tensorflow`` -- for exporting ``keras`` models into protobuf format that
-  NOvASoft expects. Note that only ``tensorflow`` v1 is supported currently.
 
 * ``pytables`` -- for working with HDF5 files.
 * ``speval`` -- for parallelizing training across multiple machines.
