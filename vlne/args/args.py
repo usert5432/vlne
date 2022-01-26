@@ -2,12 +2,22 @@
 Definition of the `Args` object that holds runtime training configuration.
 """
 
+import difflib
 import os
 
 from vlne.consts import ROOT_DATADIR, ROOT_OUTDIR
 from .config import Config
 
 FNAME_LABEL = 'label'
+
+def get_config_difference(old_conf_str, new_conf_str):
+    diff = difflib.unified_diff(
+        old_conf_str.split('\n'), new_conf_str.split('\n'),
+        fromfile = 'Old Config',
+        tofile   = 'New Config',
+    )
+
+    return '\n'.join(diff)
 
 class Args:
     # pylint: disable=too-many-instance-attributes
@@ -126,7 +136,26 @@ class Args:
         self.workers      = workers
         self.log_level    = log_level
 
+    def _verify_config_collision(self):
+        if not os.path.exists(self.savedir):
+            return
+
+        try:
+            old_config = Config.load(self.savedir)
+        except IOError:
+            return
+
+        new_conf_str = self.config.pprint()
+        old_conf_str = old_config.pprint()
+
+        if old_conf_str != new_conf_str:
+            diff = get_config_difference(old_conf_str, new_conf_str)
+            raise ValueError(
+                f"Config collision detected in '{self.savedir}' :\n{diff}\n"
+            )
+
     def save(self):
+        self._verify_config_collision()
         self.config.save(self.savedir)
 
         if self.label is not None:
