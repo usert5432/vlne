@@ -188,14 +188,12 @@ class Config:
         return { x : getattr(self, x) for x in self.__slots__ }
 
     def save(self, savedir):
-        """Save configuration to `savedir`/config.json"""
-        with open("%s/%s" % (savedir, CONFIG_FNAME), 'wt') as f:
+        with open(os.path.join(savedir, CONFIG_FNAME), 'wt') as f:
             json.dump(self.to_dict(), f, sort_keys = True, indent = 4)
 
     @staticmethod
     def load(savedir):
-        """Load configuration from `savedir`/config.json"""
-        with open("%s/%s" % (savedir, CONFIG_FNAME), 'rt') as f:
+        with open(os.path.join(savedir, CONFIG_FNAME), 'rt') as f:
             kwargs = json.load(f)
 
         return Config(**kwargs)
@@ -204,7 +202,6 @@ class Config:
         return json.dumps(self.to_dict(), sort_keys = True)
 
     def pprint(self):
-        """Pretty print configuration"""
         return json.dumps(self.to_dict(), sort_keys = True, indent = 4)
 
     def modify_vars(self, vars_mod_slice, vars_mod_png2d, vars_mod_png3d):
