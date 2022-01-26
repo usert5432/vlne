@@ -130,11 +130,13 @@ class EvalConfig:
         return json.dumps(self.to_dict(), **kwargs)
 
     def get_evaldir(self, outdir):
+        if self.data not in  [ None, 'same' ]:
+            data = os.path.basename(self.data)
+        else:
+            data = 'same'
+
         return os.path.join(
-            outdir,
-            'eval_d(%s)_p(%s)_%s' % (
-                self.data or 'same', self.preset, self.label
-            )
+            outdir, f'eval_d({data})_p({self.preset})_{self.label}'
         )
 
     @staticmethod
