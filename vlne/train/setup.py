@@ -2,6 +2,8 @@
 A collection of functions to setup keras training.
 """
 
+import copy
+
 import tensorflow as tf
 import tensorflow.keras as keras
 
@@ -12,14 +14,21 @@ from vlne.keras.models    import (
     model_trans_v1
 )
 
+def split_name_kwargs(obj):
+    if isinstance(obj, str):
+        name   = obj
+        kwargs = {}
+    else:
+        kwargs = copy.deepcopy(obj)
+        name   = kwargs.pop('name')
+
+        if 'kwargs' in kwargs:
+            kwargs = kwargs['kwargs']
+
+    return (name, kwargs)
+
 def get_optimizer(optimizer):
-    """Get `keras` optimizer from the conf stored in `optimizer`"""
-
-    if not isinstance(optimizer, dict):
-        return optimizer
-
-    name   = optimizer['name']
-    kwargs = optimizer.get('kwargs', {}) or {}
+    name, kwargs = split_name_kwargs(optimizer)
 
     if name.lower() == 'rmsprop':
         return keras.optimizers.RMSprop(**kwargs)
@@ -31,13 +40,7 @@ def get_optimizer(optimizer):
         raise ValueError("Unknown optimizer: %s" % (optimizer))
 
 def get_schedule(schedule):
-    """Get `keras` LR decay schedule from the conf stored in `schedule`"""
-
-    if not isinstance(schedule, dict):
-        return schedule
-
-    name   = schedule['name']
-    kwargs = schedule.get('kwargs', {}) or {}
+    name, kwargs = split_name_kwargs(schedule)
     kwargs['verbose'] = True
 
     if name.lower() == 'standard':
@@ -50,13 +53,7 @@ def get_schedule(schedule):
         raise ValueError("Unknown schedule: %s" % (schedule))
 
 def get_early_stop(early_stop):
-    """Get `keras` early stop from the conf stored in `early_stop`"""
-
-    if not isinstance(early_stop, dict):
-        return early_stop
-
-    name   = early_stop['name']
-    kwargs = early_stop.get('kwargs', {}) or {}
+    name, kwargs = split_name_kwargs(early_stop)
     kwargs['verbose'] = True
 
     if name.lower() == 'standard':
@@ -66,8 +63,6 @@ def get_early_stop(early_stop):
         raise ValueError("Unknown early stoping: %s" % (early_stop))
 
 def get_default_callbacks(args):
-    """Get default `keras` callbacks for the `vlne` training"""
-
     cb_checkpoint = keras.callbacks.ModelCheckpoint(
         "%s/model.h5" % args.savedir,
         monitor           = 'val_loss',
@@ -91,13 +86,7 @@ def get_default_callbacks(args):
     return callbacks
 
 def get_regularizer(regularizer):
-    """Get `keras` regularizer from the conf stored in `regularizer`"""
-
-    if not isinstance(regularizer, dict):
-        return regularizer
-
-    name   = regularizer['name']
-    kwargs = regularizer.get('kwargs', {}) or {}
+    name, kwargs = split_name_kwargs(regularizer)
 
     if name.lower() == 'l1':
         return keras.regularizers.l1(**kwargs)
@@ -111,11 +100,7 @@ def get_regularizer(regularizer):
     raise ValueError("Unknown regularizer: %s" % (regularizer))
 
 def select_model(args):
-    """Get `keras` model for the `vlne` training."""
-
-    name   = args.model['name']
-    kwargs = args.model.get('kwargs', {}) or {}
-
+    name, kwargs = split_name_kwargs(args.model)
     kwargs = {
         'reg'                 : get_regularizer(args.regularizer),
         'max_prongs'          : args.max_prongs,
