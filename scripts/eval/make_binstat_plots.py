@@ -3,6 +3,7 @@ import os
 
 from vlne.presets         import PRESETS_EVAL
 from vlne.plot.binstat    import plot_binstats
+from vlne.plot.funcs      import PlotData
 from vlne.utils.eval      import standard_eval_prologue, parse_binning
 from vlne.utils.log       import setup_logging
 from vlne.utils.parsers   import (
@@ -59,14 +60,16 @@ def make_binstat_plots(
     plot_spec_rel, plotdir, ext
 ):
     root = os.path.join(plotdir, "binstat")
-    os.makedirs(root)
+    os.makedirs(root, exist_ok = True)
+
+    plot_data_list = [
+        PlotData(pred_base_dict,  true_dict, weights, 'Baseline', 'C0'),
+        PlotData(pred_model_dict, true_dict, weights, 'Model',    'C1'),
+    ]
 
     plot_binstats(
-        [
-            (pred_base_dict,  true_dict, weights, 'Baseline', 'C0'),
-            (pred_model_dict, true_dict, weights, 'Model',    'C1'),
-        ],
-        plot_spec_abs, plot_spec_rel, os.path.join(root, "plot_binstat"), ext
+        plot_data_list, plot_spec_abs, plot_spec_rel,
+        os.path.join(root, "plot_binstat"), ext
     )
 
 def main():
