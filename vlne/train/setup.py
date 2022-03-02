@@ -2,11 +2,10 @@
 A collection of functions to setup keras training.
 """
 
-import copy
-
 import tensorflow as tf
-import tensorflow.keras as keras
+from tensorflow import keras
 
+from vlne.funcs import unpack_name_args
 from vlne.keras.callbacks import TrainTime
 from vlne.keras.models    import (
     flattened_model, model_lstm_v1, model_lstm_v2, model_lstm_v3,
@@ -14,21 +13,8 @@ from vlne.keras.models    import (
     model_trans_v1
 )
 
-def split_name_kwargs(obj):
-    if isinstance(obj, str):
-        name   = obj
-        kwargs = {}
-    else:
-        kwargs = copy.deepcopy(obj)
-        name   = kwargs.pop('name')
-
-        if 'kwargs' in kwargs:
-            kwargs = kwargs['kwargs']
-
-    return (name, kwargs)
-
 def get_optimizer(optimizer):
-    name, kwargs = split_name_kwargs(optimizer)
+    name, kwargs = unpack_name_args(optimizer)
 
     if name.lower() == 'rmsprop':
         return keras.optimizers.RMSprop(**kwargs)
@@ -40,7 +26,7 @@ def get_optimizer(optimizer):
         raise ValueError("Unknown optimizer: %s" % (optimizer))
 
 def get_schedule(schedule):
-    name, kwargs = split_name_kwargs(schedule)
+    name, kwargs = unpack_name_args(schedule)
     kwargs['verbose'] = True
 
     if name.lower() == 'standard':
@@ -53,7 +39,7 @@ def get_schedule(schedule):
         raise ValueError("Unknown schedule: %s" % (schedule))
 
 def get_early_stop(early_stop):
-    name, kwargs = split_name_kwargs(early_stop)
+    name, kwargs = unpack_name_args(early_stop)
     kwargs['verbose'] = True
 
     if name.lower() == 'standard':
@@ -86,7 +72,7 @@ def get_default_callbacks(args):
     return callbacks
 
 def get_regularizer(regularizer):
-    name, kwargs = split_name_kwargs(regularizer)
+    name, kwargs = unpack_name_args(regularizer)
 
     if name.lower() == 'l1':
         return keras.regularizers.l1(**kwargs)
@@ -100,15 +86,14 @@ def get_regularizer(regularizer):
     raise ValueError("Unknown regularizer: %s" % (regularizer))
 
 def select_model(args):
-    name, kwargs = split_name_kwargs(args.model)
+    # pylint: disable=too-many-return-statements
+    name, kwargs = unpack_name_args(args.model)
     kwargs = {
         'reg'                 : get_regularizer(args.regularizer),
-        'max_prongs'          : args.max_prongs,
-        'vars_input_slice'    : args.vars_input_slice,
-        'vars_input_png3d'    : args.vars_input_png3d,
-        'vars_input_png2d'    : args.vars_input_png2d,
-        'var_target_total'    : args.var_target_total,
-        'var_target_primary'  : args.var_target_primary,
+        'input_groups_scalar' : args.data.input_groups_scalar,
+        'input_groups_vlarr'  : args.data.input_groups_vlarr,
+        'target_groups'       : args.data.target_groups,
+        'vlarr_limits'        : args.data.vlarr_limits,
         **kwargs
     }
 
@@ -130,26 +115,15 @@ def select_model(args):
         raise ValueError("Unknown model name: %s" % (args.model))
 
 def get_keras_concurrency_kwargs(args):
-    """Get arg dict for setting up concurrency in `keras.model.fit`"""
-    result = {}
-    result['workers'] = 0
-
-    if args.cache or (args.concurrency is None):
-        return result
+    result = {
+        'workers' : 0,
+        'use_multiprocessing' : True,
+    }
 
     if (args.workers is None) or (args.workers < 1):
         return result
 
     result['workers'] = args.workers
-
-    if args.concurrency == 'process':
-        result['use_multiprocessing'] = True
-    elif args.concurrency == 'thread':
-        result['use_multiprocessing'] = False
-    else:
-        raise RuntimeError(
-            "Unknown parallelization type: %s" % (args.concurrency)
-        )
 
     return result
 
