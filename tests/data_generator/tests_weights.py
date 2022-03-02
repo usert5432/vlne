@@ -2,11 +2,10 @@
 
 import unittest
 
-from vlne.data.data_generator.funcs.weights  import (
+from vlndata.data_frame import DictFrame
+from vlne.data.data_generator.funcs.weights import (
     calc_flat_whist, flat_weights
 )
-
-from vlne.data.data_loader.dict_loader import DictLoader
 
 from ..data import nan_equal
 
@@ -35,7 +34,7 @@ class TestsWeights(unittest.TestCase):
         whist_null    = [ 3/31, 12/31, 4/31, 12/31 ]
 
         (values_test, whist_test, bins_test) = calc_flat_whist(
-            DictLoader({ 'weight' : values_null }), var = 'weight',
+            DictFrame({ 'weight' : values_null }), var = 'weight',
                 bins = bins, range = bins_range, clip = None
         )
 
@@ -70,7 +69,7 @@ class TestsWeights(unittest.TestCase):
         whist_null    = [ 3/19, 6/19, 4/19, 6/19 ]
 
         (values_test, whist_test, bins_test) = calc_flat_whist(
-            DictLoader({ 'weight' : values_null }), var = 'weight',
+            DictFrame({ 'weight' : values_null }), var = 'weight',
                 bins = bins, range = bins_range, clip = clip
         )
 
@@ -95,7 +94,7 @@ class TestsWeights(unittest.TestCase):
         ]
 
         weights_test = flat_weights(
-            DictLoader({ 'weight' : values_null }), var = 'weight',
+            DictFrame({ 'weight' : values_null }), var = 'weight',
                 bins = bins, range = bins_range, clip = None
         )
 
@@ -119,7 +118,7 @@ class TestsWeights(unittest.TestCase):
         ]
 
         weights_test = flat_weights(
-            DictLoader({ 'weight' : values_null }), var = 'weight',
+            DictFrame({ 'weight' : values_null }), var = 'weight',
                 bins = bins, range = bins_range, clip = clip
         )
 
