@@ -7,5 +7,4 @@ Manuals
 
    data
    directory_structure
-   wilson_cluster
 

@@ -11,10 +11,6 @@ that.
 In addition to that you should setup the directory structure that `vlne`
 expects, c.f. :ref:`manuals/directory_structure:Directory Structure Setup`.
 
-If you would like to perform training on the Wilson Cluster then refer to
-the :ref:`manuals/wilson_cluster:Wilson Cluster Setup` about how to setup
-training environment on the Wilson Cluster.
-
 Training
 --------
 
