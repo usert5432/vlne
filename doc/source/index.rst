@@ -5,7 +5,7 @@ Preface
 experiments.
 
 If you just found `vlne` and wondering where to begin, then take a look at
-the tutorial :doc:`tutorials/mprod5/index`. This tutorial will walk you though
+the tutorial :doc:`tutorials/nova/index`. This tutorial will walk you though
 the steps needed to train NOvA LSTM Energy Estimator, evaluate it and use with
 ``NOvASoft``.
 

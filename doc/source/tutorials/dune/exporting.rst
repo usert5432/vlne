@@ -12,7 +12,7 @@ Converting keras Network into Protobuf Format
 
 Please refer to the NOvA's tutorial about how to convert ``keras`` network
 into the ``protobuf`` format:
-:ref:`tutorials/mprod5/exporting:Converting keras Network into Protobuf Format`
+:ref:`tutorials/nova/exporting:Converting keras Network into Protobuf Format`
 .
 
 Using Network with dunetpc
