@@ -15,9 +15,7 @@ preset_uboone_numu_base = {
 
 preset_uboone_numu_v1 = {
     **preset_uboone_numu_base,
-    'vars_input_slice': [
-        "event.numu_score",
-    ],
+    'vars_input_slice': [ ],
     'vars_input_png3d' : [
         "particle.start.x",
         "particle.start.y",
