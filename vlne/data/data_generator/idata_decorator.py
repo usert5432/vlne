@@ -1,14 +1,9 @@
-"""
-Definition of an interface of a decorator around `IDataGenerator`.
-"""
-
 from .idata_generator import IDataGenerator
 
 class IDataDecorator(IDataGenerator):
-    """An interface to a decorator around `IDataGenerator`"""
 
     def __init__(self, dgen):
-        super(IDataDecorator, self).__init__()
+        super().__init__(dgen.dataset, dgen.input_groups, dgen.target_groups)
         self._dgen = dgen
 
     def __len__(self):
@@ -18,28 +13,8 @@ class IDataDecorator(IDataGenerator):
         return self._dgen[index]
 
     @property
-    def vars_input_slice(self):
-        return self._dgen.vars_input_slice
-
-    @property
-    def vars_input_png2d(self):
-        return self._dgen.vars_input_png2d
-
-    @property
-    def vars_input_png3d(self):
-        return self._dgen.vars_input_png3d
-
-    @property
-    def var_target_total(self):
-        return self._dgen.var_target_total
-
-    @property
-    def var_target_primary(self):
-        return self._dgen.var_target_primary
-
-    @property
-    def data_loader(self):
-        return self._dgen.data_loader
+    def dataset(self):
+        return self._dgen.dataset
 
     @property
     def weights(self):

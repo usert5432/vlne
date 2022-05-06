@@ -1,60 +1,28 @@
-"""
-Definition of a DataGenerator interface.
-"""
 
 class IDataGenerator:
-    """An interface to a DataGenerator.
 
-    An `IDataGenerator` holds an instance of `IDataLoader` object and creates
-    batches of data from it.
-    """
-
-    def __init__(self):
-        self._vars_input_slice   = None
-        self._vars_input_png2d   = None
-        self._vars_input_png3d   = None
-        self._var_target_total   = None
-        self._var_target_primary = None
-        self._data_loader        = None
-        self._weights            = None
+    def __init__(self, dataset, input_groups, target_groups):
+        self._dataset       = dataset
+        self._input_groups  = input_groups
+        self._target_groups = target_groups
 
     @property
-    def vars_input_slice(self):
-        """List of slice level input var names to create batches for"""
-        return self._vars_input_slice
+    def dataset(self):
+        return self._dataset
 
     @property
-    def vars_input_png2d(self):
-        """List of 2D prong level input var names to create batches for"""
-        return self._vars_input_png2d
+    def input_groups(self):
+        return self._input_groups
 
     @property
-    def vars_input_png3d(self):
-        """List of 3D prong level input var names to create batches for"""
-        return self._vars_input_png3d
-
-    @property
-    def var_target_total(self):
-        """Name of total energy target var to create batches for"""
-        return self._var_target_total
-
-    @property
-    def var_target_primary(self):
-        """Name of primary energy target var to create batches for"""
-        return self._var_target_primary
-
-    @property
-    def data_loader(self):
-        """`IDataLoader` values from which will be used to create batches"""
-        return self._data_loader
+    def target_groups(self):
+        return self._target_groups
 
     @property
     def weights(self):
-        """`np.ndarray` of sample weights, shape (len(self.data_loader),)"""
-        return self._weights
+        raise NotImplementedError
 
     def __len__(self):
-        """Number of batches this `IDataGenerator` is capable of generating"""
         raise NotImplementedError
 
     def __getitem__(self, index):

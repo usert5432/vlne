@@ -5,7 +5,7 @@ Functions for calculating data weights.
 import numpy as np
 
 def calc_flat_whist(
-    data_loader, var = 'trueE', bins = 50, range = (0, 5), clip = None
+    df, var = 'trueE', bins = 50, range = (0, 5), clip = None
 ):
     """Calculate normalized inverse of the `var` histogram.
 
@@ -15,8 +15,8 @@ def calc_flat_whist(
 
     Parameters
     ----------
-    data_loader : IDataLoader
-        vlne `IDataLoader` object that holds values of the `var`.
+    df : DataFrameBase
+        Data Frame that contains `var` column.
     var : str
         Variable name in `IDataLoader` which histogram is to be calculated.
     bins : int or ndarray
@@ -38,7 +38,7 @@ def calc_flat_whist(
         List of bin edges.
     """
     # pylint: disable=redefined-builtin
-    wvalues    = data_loader.get(var)
+    wvalues    = df[var]
     hist, bins = np.histogram(wvalues, bins = bins, range = range)
 
     # Regularization
@@ -56,14 +56,14 @@ def calc_flat_whist(
     return (wvalues, whist, bins)
 
 def flat_weights(
-    data_loader, var = 'trueE', bins = 50, range = (0, 5), clip = None
+    df, var = 'trueE', bins = 50, range = (0, 5), clip = None
 ):
     """Calculate weights that will make weighted histogram of `var` flat.
 
     Parameters
     ----------
-    data_loader : IDataLoader
-        vlne `IDataLoader` object that holds values of the `var`.
+    df : DataFrameBase
+        Data Frame that contains `var` column.
     var : str
         Variable name in `IDataLoader` which histogram should be flattened.
     bins : int or ndarray
@@ -83,9 +83,7 @@ def flat_weights(
     """
 
     # pylint: disable=redefined-builtin
-    (wvalues, whist, bins) = calc_flat_whist(
-        data_loader, var, bins, range, clip
-    )
+    (wvalues, whist, bins) = calc_flat_whist(df, var, bins, range, clip)
 
     wpos = np.digitize(wvalues, bins)
 
@@ -94,7 +92,7 @@ def flat_weights(
     wpos[wpos == len(bins)] = len(bins) - 1
 
     weights = whist[wpos - 1]
-    weights = weights / sum(weights) * len(data_loader)
+    weights = weights / sum(weights) * len(df)
 
     return weights
 
