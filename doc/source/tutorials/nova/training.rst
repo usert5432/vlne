@@ -34,7 +34,7 @@ in a training configuration (in the file ``train_fd_fhc.py``):
     ...
         'dataset'      : (
             'numu/mprod5/fd_fhc'
-            '/dataset_vlne_fd_fhc_nonswap_loose_cut.csv.xz'
+            '/dataset_lstm_ee_fd_fhc_nonswap_loose_cut.csv.xz'
         ),
     ...
 
@@ -44,7 +44,7 @@ following location
 
 ::
 
-    "${VLNE_DATADIR}/numu/mprod5/fd_fhc/dataset_vlne_fd_fhc_nonswap_loose_cut.csv.xz"
+    "${VLNE_DATADIR}/numu/mprod5/fd_fhc/dataset_lstm_ee_fd_fhc_nonswap_loose_cut.csv.xz"
 
 It may take anywhere from 30 minutes to several hours for the training to
 complete, depending on your machine. You can speed up training by using
