@@ -84,7 +84,7 @@ def create_and_train_model(extra_kwargs = None, **args_dict):
     )
 
     LOGGER.info("Loading data...")
-    dgen_train, dgen_test = load_data(args)
+    dgen_train, dgen_test = load_data(args, [ 'train', 'val' ])
 
     LOGGER.info("Compiling model..")
     np.random.seed(args.seed)
