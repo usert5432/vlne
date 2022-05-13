@@ -58,56 +58,42 @@ def modify_series_layer(
 
     return layer
 
-def get_inputs(
-    vars_input_slice, vars_input_png3d, vars_input_png2d, max_prongs
-):
-    """Construct standard `vlne` input layers."""
-    inputs = []
+def get_inputs(input_groups_scalar, input_groups_vlarr, vlarr_limits):
+    inputs_scalar = {}
+    inputs_vlarr  = {}
 
-    if vars_input_slice is not None:
-        input_slice = Input(
-            shape = (len(vars_input_slice),),
+    for (name, columns) in input_groups_scalar.items():
+        inputs_scalar[name] = Input(
+            shape = (len(columns), ),
             dtype = 'float32',
-            name  = 'input_slice'
+            name  = name,
         )
-        inputs.append(input_slice)
 
-    if vars_input_png3d is not None:
-        input_png3d = Input(
-            shape = (max_prongs, len(vars_input_png3d)),
+    for (name, columns) in input_groups_vlarr.items():
+        max_length = None
+
+        if vlarr_limits is not None:
+            max_length = vlarr_limits.get(name, None)
+
+        inputs_vlarr[name] = Input(
+            shape = (max_length, len(columns)),
             dtype = 'float32',
-            name  = 'input_png3d'
+            name  = name,
         )
-        inputs.append(input_png3d)
 
-    if vars_input_png2d is not None:
-        input_png2d = Input(
-            shape = (None, len(vars_input_png2d)),
-            dtype = 'float32',
-            name  = 'input_png2d'
-        )
-        inputs.append(input_png2d)
+    return inputs_scalar, inputs_vlarr
 
-    return inputs
-
-def get_outputs(var_target_total, var_target_primary, reg, layer):
+def get_outputs(target_groups, reg, layer):
     """Construct standard `vlne` output layers."""
 
-    outputs = []
+    outputs = {}
 
-    if var_target_total is not None:
-        target_total = Dense(
-            1, name = 'target_total', kernel_regularizer = reg
+    for (name, columns) in target_groups.items():
+        outputs[name] = Dense(
+            len(columns),
+            name = name,
+            kernel_regularizer = reg
         )(layer)
-
-        outputs.append(target_total)
-
-    if var_target_primary is not None:
-        target_primary = Dense(
-            1, name = 'target_primary', kernel_regularizer = reg
-        )(layer)
-
-        outputs.append(target_primary)
 
     return outputs
 
