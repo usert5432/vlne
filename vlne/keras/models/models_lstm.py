@@ -2,6 +2,8 @@
 Functions to construct models that use LSTM layers to process prong inputs.
 """
 
+import itertools
+
 from tensorflow.keras.layers import LSTM, Concatenate
 from tensorflow.keras.models import Model
 
@@ -237,7 +239,6 @@ def model_lstm_v1(
     See Also
     --------
     model_lstm_v2
-    model_lstm_v3
     """
     assert(vars_input_png2d is None)
 
@@ -265,204 +266,103 @@ def model_lstm_v1(
     return model
 
 def model_lstm_v2(
-    lstm_units         = 16,
-    layers_pre         = [],
-    layers_post        = [],
-    n_resblocks        = None,
-    max_prongs         = 5,
-    reg                = None,
-    norm               = None,
-    dropout            = None,
-    vars_input_slice   = None,
-    vars_input_png3d   = None,
-    vars_input_png2d   = None,
-    var_target_total   = None,
-    var_target_primary = None
+    lstm_units          = 16,
+    layers_pre          = [],
+    layers_post         = [],
+    n_resblocks         = None,
+    reg                 = None,
+    norm                = None,
+    dropout             = None,
+    input_groups_scalar = None,
+    input_groups_vlarr  = None,
+    target_groups       = None,
+    vlarr_limits        = None,
 ):
-    """Create version 2 LSTM network.
-
-    This is a modification of the vanilla network that Alexander Radovic used.
-    This network also uses only 3D prong and slice level inputs.
-    However, it does LSTM input preprocessing and output postprocessing.
-
-    Parameters
-    ----------
-    lstm_units : int, optional
-        Number of units that LSTM layer will have. Default: 16.
-    layers_pre : list of int
-        List of Dense layer sizes that will be used to preprocess prong inputs.
-    layers_post : list of int
-        List of Dense layer sizes that will be used to postprocess LSTM
-        outputs.
-    n_resblocks : int or None, optional
-        Number of the fully connected residual blocks to be added before the
-        output layer. Default: None
-    max_prongs : int or None, optional
-        Limit on the number of prongs that will be used. Default: 5.
-    reg : keras.Regularizer or None, optional
-        Regularization to use. Default: None
-    norm : str or None
-        Name of the normalization layer to use.
-    dropout : float or None
-        If not None then Dropout layers with `dropout` value of dropout will
-        be added to regularize activations.
-    vars_input_slice : list of str or None
-        List of slice level input variable names.
-    vars_input_png3d : list of str or None
-        List of 3D prong level input variable names.
-    vars_input_png2d : None
-        List of 2D prong level input variable names.
-        This is dummy input variable and MUST be None.
-    var_target_total : str or None
-        Name of the variable that defines true total energy.
-    var_target_primary : str or None
-        Name of the variable that defines true primary energy.
-
-    Returns
-    -------
-    keras.Model
-        Model that defines the network.
-
-    See Also
-    --------
-    model_lstm_v1
-    model_lstm_v3
-    """
-
     # pylint: disable=dangerous-default-value
-    assert(vars_input_png2d is None)
 
-    inputs = get_inputs(
-        vars_input_slice, vars_input_png3d, vars_input_png2d, max_prongs
-    )
-    # pylint: disable=unbalanced-tuple-unpacking
-    input_slc, input_png = inputs
-
-    layer_png_1 = make_standard_lstm_branch(
-        'png', input_png, layers_pre, lstm_units, norm, dropout, reg
+    inputs_scalar, inputs_vlarr = get_inputs(
+        input_groups_scalar, input_groups_vlarr, vlarr_limits
     )
 
-    layer_merged = Concatenate()([ layer_png_1, input_slc ])
+    vlarr_branches = {}
+
+    for (name, input_layer) in inputs_vlarr.items():
+        branch_name = f'vlarr_{name}'
+
+        vlarr_branches[branch_name] = make_standard_lstm_branch(
+            branch_name, input_layer, layers_pre, lstm_units,
+            norm, dropout, reg
+        )
+
+    layer_merged = Concatenate()(
+        [ *inputs_scalar.values(), *vlarr_branches.values() ]
+    )
+
     layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
     layer_post   = make_standard_postprocess_branch(
         layer_merged, layers_post, norm, dropout, reg, n_resblocks
     )
 
-    outputs = get_outputs(
-        var_target_total, var_target_primary, reg, layer_post
-    )
+    outputs = get_outputs(target_groups, reg, layer_post)
 
-    return Model(inputs = inputs, outputs = outputs)
+    return Model(
+        inputs  = list(
+            itertools.chain(inputs_scalar.values(), inputs_vlarr.values())
+        ),
+        outputs = list(outputs.values())
+    )
 
 def model_lstm_v3(
-    lstm_units3d       = 16,
-    lstm_units2d       = 16,
-    layers_pre         = [],
-    layers_post        = [],
-    n_resblocks        = 0,
-    max_prongs         = None,
-    reg                = None,
-    norm               = None,
-    dropout            = None,
-    vars_input_slice   = None,
-    vars_input_png3d   = None,
-    vars_input_png2d   = None,
-    var_target_total   = None,
-    var_target_primary = None,
-    lstm_kwargs        = None
+    lstm_units3d = 16,
+    lstm_units2d = 16,
+    layers_pre   = [],
+    layers_post  = [],
+    n_resblocks  = 0,
+    reg          = None,
+    norm         = None,
+    dropout      = None,
+    lstm_kwargs  = None,
+    input_groups_scalar = None,
+    input_groups_vlarr  = None,
+    target_groups       = None,
+    vlarr_limits        = None,
 ):
-    """Create version 3 LSTM network.
-
-    This is the latest revision of the LSTM network:
-        - It uses both 2D and 3D prong level inputs
-        - It relies on a heavy input preprocessing and postprocessing.
-
-    Parameters
-    ----------
-    lstm_units3d : int
-        Number of units that LSTM layer that processes 3D prongs will have.
-        Default: 16.
-    lstm_units2d : int
-        Number of units that LSTM layer that processes 2D prongs will have.
-        Default: 16.
-    layers_pre : list of int
-        List of Dense layer sizes that will be used to preprocess prong inputs.
-        Same Dense layer configuration will be used for 2D and 3D level
-        prong inputs.
-    layers_post : list of int
-        List of Dense layer sizes that will be used to postprocess LSTM
-        outputs.
-    n_resblocks : int or None, optional
-        Number of the fully connected residual blocks to be added before the
-        output layer. Default: None
-    max_prongs : int or None, optional
-        Limit on the number of prongs that will be used. Default: None.
-    reg : keras.Regularizer or None, optional
-        Regularization to use. Default: None
-    norm : str or None
-        Name of the normalization layer to use.
-    dropout : float or None
-        If not None then Dropout layers with `dropout` value of dropout will
-        be added to regularize activations.
-    vars_input_slice : list of str or None
-        List of slice level input variable names.
-    vars_input_png3d : list of str or None
-        List of 3D prong level input variable names.
-    vars_input_png2d : None
-        List of 2D prong level input variable names.
-        This is dummy input variable and MUST be None.
-    var_target_total : str or None
-        Name of the variable that defines true total energy.
-    var_target_primary : str or None
-        Name of the variable that defines true primary energy.
-    lstm_kwargs : dict or None, optional
-        Extra arguments that will be passed to the LSTM layer constructors.
-        Default: None
-
-    Returns
-    -------
-    keras.Model
-        Model that defines the network.
-
-    See Also
-    --------
-    model_lstm_v1
-    model_lstm_v2
-    model_lstm_v3_stack
-    """
-
     # pylint: disable=dangerous-default-value
+    assert lstm_units3d == lstm_units2d
 
-    inputs = get_inputs(
-        vars_input_slice, vars_input_png3d, vars_input_png2d, max_prongs
-    )
-    # pylint: disable=unbalanced-tuple-unpacking
-    input_slice, input_png3d, input_png2d = inputs
+    lstm_units = lstm_units3d
 
-    layer_lstm_png3d = make_standard_lstm_branch(
-        'png3d', input_png3d, layers_pre, lstm_units3d,
-        norm, dropout, reg, lstm_kwargs
+    inputs_scalar, inputs_vlarr = get_inputs(
+        input_groups_scalar, input_groups_vlarr, vlarr_limits
     )
 
-    layer_lstm_png2d = make_standard_lstm_branch(
-        'png2d', input_png2d, layers_pre, lstm_units2d,
-        norm, dropout, reg, lstm_kwargs
+    vlarr_branches = {}
+
+    for (name, input_layer) in inputs_vlarr.items():
+        branch_name = f'vlarr_{name}'
+
+        vlarr_branches[branch_name] = make_standard_lstm_branch(
+            branch_name, input_layer, layers_pre, lstm_units,
+            norm, dropout, reg, lstm_kwargs
+        )
+
+    layer_merged = Concatenate()(
+        [ *inputs_scalar.values(), *vlarr_branches.values() ]
     )
 
-    layer_merged = Concatenate()([
-        layer_lstm_png3d, layer_lstm_png2d, input_slice
-    ])
     layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
-
     layer_post   = make_standard_postprocess_branch(
         layer_merged, layers_post, norm, dropout, reg, n_resblocks
     )
 
-    outputs = get_outputs(
-        var_target_total, var_target_primary, reg, layer_post
-    )
+    outputs = get_outputs(target_groups, reg, layer_post)
 
-    return Model(inputs = inputs, outputs = outputs)
+    return Model(
+        inputs  = list(
+            itertools.chain(inputs_scalar.values(), inputs_vlarr.values())
+        ),
+        outputs = list(outputs.values())
+    )
 
 def model_lstm_v3_stack(
     lstm3d_spec        = [ (32, 'forward'), ],
