@@ -11,7 +11,7 @@ from vlne.utils   import parse_concurrency_cmdargs, setup_logging
 from speval import speval
 
 config = join_dicts(
-    PRESETS_TRAIN['numu_v2'],
+    PRESETS_TRAIN['nova_numu_v2'],
     {
     # Config:
         'batch_size'   : 1024,

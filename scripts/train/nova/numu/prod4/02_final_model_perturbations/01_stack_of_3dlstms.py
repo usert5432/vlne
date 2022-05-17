@@ -11,7 +11,7 @@ from vlne.train   import create_and_train_model
 from vlne.utils   import parse_concurrency_cmdargs, setup_logging
 
 config = join_dicts(
-    PRESETS_TRAIN['numu_v3'],
+    PRESETS_TRAIN['nova_numu_v3'],
     {
     # Config:
         'batch_size'   : 1024,
