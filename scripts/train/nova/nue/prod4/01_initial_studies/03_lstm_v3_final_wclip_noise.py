@@ -20,7 +20,7 @@ config = join_dicts(
         #'vars_target_total',
         #'vars_target_primary',
         'dataset'      :
-            'nue/prod4/fd_fhc/dataset_vlne_fd_fhc_fluxswap_std_cut.csv.xz',
+            'nue/prod4/fd_fhc/dataset_lstm_ee_fd_fhc_fluxswap_std_cut.csv.xz',
         'early_stop'   : {
             'name'   : 'standard',
             'kwargs' : {

@@ -21,7 +21,7 @@ config = join_dicts(
         #'vars_target_primary',
         'dataset'      : (
             'numu/prod4/nd_fhc'
-            '/dataset_vlne_nd_fhc_nonswap_loose_cut.csv.xz'
+            '/dataset_lstm_ee_nd_fhc_nonswap_loose_cut.csv.xz'
         ),
         'early_stop'   : {
             'name'   : 'standard',
