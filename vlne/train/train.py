@@ -104,7 +104,7 @@ def create_and_train_model(extra_kwargs = None, **args_dict):
         steps_per_epoch = min(args.steps_per_epoch, len(dgen_train))
 
     LOGGER.info("Training model..")
-    train_log = model.fit_generator(
+    train_log = model.fit(
         dgen_train,
         epochs          = args.epochs,
         steps_per_epoch = steps_per_epoch,
