@@ -1,5 +1,11 @@
 from keras import backend as K
-from keras.engine.base_layer import Layer, InputSpec
+from keras.engine.base_layer import Layer
+
+try:
+    # TensorFlow developers are not burdened by consistency
+    from keras.engine.base_layer import InputSpec
+except ImportError:
+    from keras.layers import InputSpec
 
 class SimpleNorm(Layer):
     """Layer that standartizes data by using moving mean/variance
@@ -13,7 +19,7 @@ class SimpleNorm(Layer):
         Number that is added to the denominator to prevent division by zero.
     """
 
-    def __init__(self, momentum = 0.99, epsilon = 1e-3, **kwargs):
+    def __init__(self, momentum = 0.99999, epsilon = 1e-3, **kwargs):
         super().__init__(**kwargs)
 
         self._momentum = momentum
@@ -67,9 +73,14 @@ class SimpleNorm(Layer):
                     self.moving_mean, mean, self._momentum
                 ),
                 K.moving_average_update(self.moving_var, var, self._momentum),
-            ],
-            inputs
+            ]
         )
+
+    def get_config(self):
+        return {
+            'momentum' : self._momentum,
+            'epsilon'  : self._epsilon,
+        }
 
     def call(self, inputs, training = None):
         # pylint: disable=arguments-differ
@@ -87,4 +98,7 @@ class SimpleNorm(Layer):
             axis    = 1,
             epsilon = self._epsilon
         )
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
 
