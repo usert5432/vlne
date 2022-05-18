@@ -85,6 +85,13 @@ def add_concurrency_parser(parser):
     )
 
     parser.add_argument(
+        '--precache',
+        help    = 'precache dataset in RAM',
+        action  = 'store_true',
+        dest    = 'precache',
+    )
+
+    parser.add_argument(
         '--workers',
         help    = 'number of concurrent workers',
         dest    = 'workers',
@@ -137,6 +144,7 @@ def parse_concurrency_cmdargs(config_dict, title = "Train"):
     add_concurrency_parser(parser)
 
     cmdargs = parser.parse_args()
-    config_dict['cache']   = cmdargs.cache
-    config_dict['workers'] = cmdargs.workers
+    config_dict['cache']    = cmdargs.cache
+    config_dict['precache'] = cmdargs.precache
+    config_dict['workers']  = cmdargs.workers
 
