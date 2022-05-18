@@ -8,6 +8,7 @@ import numpy as np
 from vlne.args       import Args
 from vlne.args.funcs import update_kwargs
 from vlne.data       import load_data
+from vlne.utils.io   import precache
 from .setup       import (
     get_optimizer, get_default_callbacks, get_keras_concurrency_kwargs,
     select_model, limit_tf_memory_growth
@@ -85,6 +86,10 @@ def create_and_train_model(extra_kwargs = None, **args_dict):
 
     LOGGER.info("Loading data...")
     dgen_train, dgen_test = load_data(args, [ 'train', 'val' ])
+
+    if args.precache:
+        precache(dgen_train, 'train dset')
+        precache(dgen_test,  'test dset')
 
     LOGGER.info("Compiling model..")
     np.random.seed(args.seed)
