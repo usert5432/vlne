@@ -49,6 +49,8 @@ class Args:
         modified. C.f. `vars_mod_png2d` parameter.
     cache : bool, optional
         If True data batches will be cached in RAM. Default: False.
+    precache : bool, optional
+        If True data batches will be precached in RAM. Default: False.
     workers : int or None, optional
         Number of parallel workers to spawn for the purpose of data batch
         generation. If None then no parallelization will be used.
@@ -87,6 +89,7 @@ class Args:
         'root_outdir',
 
         'cache',
+        'precache',
         'workers',
 
         'log_level',
@@ -98,6 +101,7 @@ class Args:
         root_datadir = ROOT_DATADIR,
         root_outdir  = ROOT_OUTDIR,
         cache        = False,
+        precache     = False,
         save_best    = True,
         workers      = None,
         log_level    = 'INFO',
@@ -107,7 +111,8 @@ class Args:
         self.label        = label
         self.root_datadir = root_datadir
         self.root_outdir  = root_outdir
-        self.cache        = cache
+        self.cache        = (cache or precache)
+        self.precache     = precache
         self.save_best    = save_best
         self.workers      = workers
         self.log_level    = log_level
@@ -158,6 +163,7 @@ class Args:
         root_datadir   = ROOT_DATADIR,
         root_outdir    = ROOT_OUTDIR,
         cache          = False,
+        precache       = False,
         save_best      = True,
         workers        = 0,
         log_level      = 'INFO',
@@ -167,8 +173,8 @@ class Args:
         savedir = config.get_savedir(os.path.join(root_outdir, outdir), label)
 
         result = Args(
-            config, savedir, label, root_datadir, root_outdir, cache,
-            save_best, workers, log_level,
+            config, savedir, label, root_datadir, root_outdir, cache, precache,
+            save_best, workers, log_level
         )
 
         result.save()
