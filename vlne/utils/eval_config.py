@@ -7,36 +7,8 @@ import os
 
 EVAL_CONFIG_FNAME = 'evsl_config.json'
 
-def modify_args_value(args, attr, eval_value, dtype = None):
-    """Set `args` attribute `attr` to `eval_value`.
-
-    This function modifies `args` attribute `attr`. It sets it to `eval_value`
-    paying attention to the special values of `eval_value`:
-      - if `eval_value` is None, then the `attr` value won't be modified.
-      - if `eval_value` == 'none', then the `attr` value will be set to None.
-      - otherwise, `attr` = `eval_value`
-    """
-    if (eval_value is None) or (eval_value == 'same'):
-        return
-
-    if eval_value.lower() == 'none':
-        setattr(args, attr, None)
-    else:
-        if dtype:
-            setattr(args, attr, dtype(eval_value))
-        else:
-            setattr(args, attr, eval_value)
-
 def modify_args_value_from_conf(args, attr, eval_value):
-    """Load `args` attribute `attr` from a json file `eval_value`.
-
-    This function modifies `args` attribute `attr`. It loads its value from
-    a json file `eval_value` paying attention to the special values of
-    `eval_value`:
-      - if `eval_value` is None, then the `attr` value won't be modified.
-      - if `eval_value` == 'none', then the `attr` value will be set to None.
-      - otherwise, `attr` = json.load(`eval_value`)
-    """
+    """Load `args` attribute `attr` from a json file `eval_value`"""
     if (eval_value is None) or (eval_value == 'same'):
         return
 
@@ -65,34 +37,25 @@ class EvalConfig:
         Label used to uniquely identify current evaluation.
     data : str or None,
         Name of the evaluation dataset.
-    noise : str or None,
-        JSON file name with the noise config that will be used during
-        evaluation.  C.f. `Config.noise` for the configuration spec.
+    transform : str or None,
+        JSON file name with the transform config that will be used during
+        evaluation.  C.f. `DataConfig.transform` for the configuration spec.
+    split : str
+        Data split to use for evaluation. Supported: [ 'train', 'val', 'test' ]
     preset : str or None,
         Name of the evaluation preset. C.f. `PRESETS_EVAL`.
-    prong_sorter : str or None,
-        JSON file name with the prong sorting config that will be used during
-        evaluation.  C.f. `Config.prong_sorter` for the configuration spec.
-    seed : int or str or None,
-        Seed to initialize PRG for splitting dataset into training/validation
-        parts.
-    test_size : int or float or str or None
-        Size of the dataset that will be used for evaluation.
-        C.f. `Config.test_size`.
     weights : str or None
         Weights specification that will be used during the evaluation.
-        C.f. `Config.weights`.
+        C.f. `DataConfig.weights`.
     """
 
     # pylint: disable=too-many-instance-attributes
     __slots__ = [
         'label',
         'data',
-        'noise',
         'preset',
-        'prong_sorter',
-        'seed',
-        'test_size',
+        'split',
+        'transform',
         'weights',
     ]
 
@@ -102,26 +65,21 @@ class EvalConfig:
         return EvalConfig(
             cmdargs.label,
             cmdargs.data,
-            cmdargs.noise,
             cmdargs.preset,
-            cmdargs.prong_sorter,
-            cmdargs.seed,
-            cmdargs.test_size,
+            cmdargs.split,
+            cmdargs.transform,
             cmdargs.weights,
         )
 
     def __init__(
-        self, label, data, noise, preset, prong_sorter, seed, test_size,
-        weights
+        self, label, data, preset, split, transform, weights
     ):
-        self.label        = label
-        self.data         = data
-        self.noise        = noise
-        self.preset       = preset
-        self.prong_sorter = prong_sorter
-        self.seed         = seed
-        self.test_size    = test_size
-        self.weights      = weights
+        self.label     = label
+        self.data      = data
+        self.preset    = preset
+        self.split     = split
+        self.transform = transform
+        self.weights   = weights
 
     def to_dict(self):
         return { k : getattr(self, k) for k in self.__slots__ }
@@ -136,7 +94,8 @@ class EvalConfig:
             data = 'same'
 
         return os.path.join(
-            outdir, f'eval_d({data})_p({self.preset})_{self.label}'
+            outdir,
+            f'eval_d({data})_p({self.preset})_s({self.split})_{self.label}'
         )
 
     @staticmethod
@@ -163,15 +122,30 @@ class EvalConfig:
         with open(path, 'wt') as f:
             f.write(curr_conf_str)
 
-    def modify_eval_args(self, args):
-        """Modify parameters of `args` using values from `self`"""
-        modify_args_value(args.config, 'dataset',   self.data)
-        modify_args_value(args.config, 'seed',      self.seed, int)
-        modify_args_value(args.config, 'test_size', self.test_size, float)
-        modify_args_value(args.config, 'weights',   self.weights)
+    def modify_data_weights(self, args):
+        if (self.weights is None) or (self.weights == 'same'):
+            return
 
-        modify_args_value_from_conf(args.config, 'noise', self.noise)
+        if self.weights == 'none':
+            args.config.data.weights = None
+            return
+
+        for w in args.config.data.weights:
+            args.config.data.weights[w] = self.weights
+
+    def modify_data_path(self, args):
+        if (self.data is None) or (self.data == 'same'):
+            return
+
+        args.config.data.frame['path'] = self.data
+        args.config.data.val_size      = 0
+        args.config.data.test_size     = 1.0
+
+    def modify_eval_args(self, args):
+        self.modify_data_path(args)
+        self.modify_data_weights(args)
+
         modify_args_value_from_conf(
-            args.config, 'prong_sorters', self.prong_sorter
+            args.config.data, 'transform_test', self.transform
         )
 
