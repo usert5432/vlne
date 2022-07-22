@@ -9,7 +9,7 @@ from cafplot.plot import make_plotdir
 from vlne.data import load_data
 
 from .eval_config import EvalConfig
-from .io          import load_model
+from .io          import load_model, precache
 
 def make_eval_outdir(outdir, eval_config):
     """Create evaluation subdir unique for `eval_config`"""
@@ -58,7 +58,10 @@ def standard_eval_prologue(cmdargs, presets_eval):
     eval_config.modify_eval_args(args)
     modify_concurrency_args(args, cmdargs)
 
-    _, dgen = load_data(args)
+    dgen = load_data(args, splits = [ eval_config.split, ])[0]
+    if cmdargs.precache:
+        precache(dgen, f'{eval_config.split} dset')
+
     outdir  = make_eval_outdir(cmdargs.outdir, eval_config)
     plotdir = make_plotdir(outdir)
     preset  = presets_eval[cmdargs.preset]
