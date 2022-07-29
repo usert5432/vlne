@@ -17,32 +17,15 @@ from .setup       import (
 LOGGER = logging.getLogger('vlne.train')
 
 def return_training_stats(train_log, savedir):
-    """Return a dict with a summary of training results.
-
-    Parameters
-    ----------
-    train_log : keras.History
-        Training history returned by `keras.model.fit`
-    savedir : str
-        Directory where trained model is saved.
-
-    Return
-    ------
-    dict
-        Dictionary with training summary.
-    """
+    """Return a dict with a summary of training results."""
 
     best_idx = np.argmin(train_log.history['val_loss'])
-
-    result = {
-        'loss'    : (
-            train_log.history['val_target_total_loss'][best_idx]
-          + train_log.history['val_target_primary_loss'][best_idx]
-        ),
+    result   = {
+        'loss'    : train_log.history['val_loss'][best_idx],
         'status'  : 0,
         'time'    : train_log.history['train_time'][-1],
         'epochs'  : len(train_log.history['val_loss']),
-        'savedir' : savedir
+        'savedir' : savedir,
     }
 
     return result
