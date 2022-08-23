@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from cafplot.plot      import save_fig
 
+from vlne.eval.funcs import get_weights
+
 def plot_rel_res_vs_true_base(pred, true, weights, spec, logNorm = False):
     """Plot 2D histogram of relative energy resolution vs true energy"""
 
@@ -35,35 +37,17 @@ def plot_rel_res_vs_true_base(pred, true, weights, spec, logNorm = False):
     return f, ax
 
 def plot_rel_res_vs_true(
-    pred_dict, true_dict, weights, plot_specs, fname, ext
+    pred_dict, true_dict, weights_dict, plot_specs, fname, ext
 ):
     """
     Make and save 2D hist plots of relative energy resolution vs true energy.
-
-    Parameters
-    ----------
-    pred_dict : dict
-        Dictionary where keys are energy labels and values are `ndarray`
-        (shape (N,)) of predicted energies.
-    true_dict : dict
-        Dictionary where keys are energy labels and values are `ndarray`
-        (shape (N,)) of true energies.
-    weights : ndarray, shape (N,)
-        Sample weights.
-    plot_specs : dict
-        Dictionary where keys are energy labels and values are `PlotSpec` that
-        specify the plot style and histogram bins.
-    fname : str
-        Prefix of the path that will be used to build plot file names.
-    ext : str or list of str
-        Extension of the plot. If list then the plot will be saved in multiple
-        formats.
     """
 
-    for k in pred_dict.keys():
-        pred = pred_dict[k]
-        true = true_dict[k]
-        spec = plot_specs[k]
+    for target in pred_dict.keys():
+        pred    = pred_dict[target]
+        true    = true_dict[target]
+        weights = get_weights(weights_dict, target, pred_dict)
+        spec    = plot_specs[target]
 
         for logNorm in [True, False]:
             try:
@@ -74,7 +58,7 @@ def plot_rel_res_vs_true(
                 print("Failed to make plot: %s" % (str(e)))
                 continue
 
-            path = "%s_%s_log(%s)" % (fname, k, logNorm)
+            path = "%s_%s_log(%s)" % (fname, target, logNorm)
 
             save_fig(f, path, ext)
             plt.close(f)
