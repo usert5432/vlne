@@ -14,6 +14,7 @@ from cafplot.plot  import (
 from cafplot.rhist import RHist1D
 
 from vlne.eval.predict   import get_true_energies
+from vlne.eval.funcs     import get_weights
 from vlne.presets        import PRESETS_EVAL
 from vlne.utils.eval     import standard_eval_prologue, parse_binning
 from vlne.utils.log      import setup_logging
@@ -79,20 +80,22 @@ def plot_single_energy_hist(data, weights, name, spec, log_scale = False):
     return f, ax, rhist
 
 def plot_energy_hists(
-    true_energies, weights, preset, hist_specs, plotdir, ext
+    true_dict, weights_dict, preset, hist_specs, plotdir, ext
 ):
-    for label, energy in true_energies.items():
+    for target, values in true_dict.items():
         for log_scale in [ True, False ]:
+            weights = get_weights(weights_dict, target, true_dict)
+
             f, _ax, rhist = plot_single_energy_hist(
-                energy, weights, preset.name_map[label], hist_specs[label],
+                values, weights, preset.name_map[target], hist_specs[target],
                 log_scale
             )
 
             suffix = 'log' if log_scale else 'linear'
-            save_fig(f, os.path.join(plotdir, f'{label}_{suffix}'), ext)
+            save_fig(f, os.path.join(plotdir, f'{target}_{suffix}'), ext)
 
-        np.savetxt(os.path.join(plotdir, f"{label}_hist.txt"), rhist.hist)
-        np.savetxt(os.path.join(plotdir, f"{label}_bins.txt"), rhist.bins_x)
+        np.savetxt(os.path.join(plotdir, f"{target}_hist.txt"), rhist.hist)
+        np.savetxt(os.path.join(plotdir, f"{target}_bins.txt"), rhist.bins_x)
 
 def main():
     setup_logging()
@@ -105,11 +108,11 @@ def main():
     plotdir    = os.path.join(outdir, 'targets')
     os.makedirs(plotdir, exist_ok = True)
 
-    true_energies = get_true_energies(dgen)
-    weights       = dgen.weights
+    true_dict    = get_true_energies(dgen)
+    weights_dict = dgen.weights
 
     plot_energy_hists(
-        true_energies, weights, preset, hist_specs, plotdir, cmdargs.ext
+        true_dict, weights_dict, preset, hist_specs, plotdir, cmdargs.ext
     )
 
 if __name__ == '__main__':
