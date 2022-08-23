@@ -3,6 +3,7 @@ import os
 
 from vlne.presets       import PRESETS_EVAL
 from vlne.plot.hist     import plot_energy_hists
+from vlne.plot.funcs    import HistData
 from vlne.utils.eval    import standard_eval_prologue, parse_binning
 from vlne.utils.log     import setup_logging
 from vlne.utils.parsers import (
@@ -46,13 +47,14 @@ def make_hist_plots(
     plotdir, ext
 ):
     """Make plots of energy histograms"""
+    hist_data_list = [
+        HistData(true_dict,       weights, 'True',  'C3'),
+        HistData(pred_base_dict,  weights, 'Base',  'C0'),
+        HistData(pred_model_dict, weights, 'Model', 'C1'),
+    ]
+
     plot_energy_hists(
-        [
-            (true_dict,       weights, 'True',  'C3'),
-            (pred_base_dict,  weights, 'Base',  'C0'),
-            (pred_model_dict, weights, 'Model', 'C1'),
-        ],
-        hist_specs, os.path.join(plotdir, "plot_hist"), ext
+        hist_data_list, hist_specs, os.path.join(plotdir, "plot_hist"), ext
     )
 
 def main():
