@@ -7,7 +7,7 @@ The relative energy resolution is defined as (Reco - True) / True.
 from cafplot.rhist import RHist1D
 from .stats import calc_all_stats
 
-def calc_fom_hist(pred, true, weights, bins, range):
+def calc_resolution_hist(pred, true, weights, bins, range):
     """Calculate relative energy resolution histogram.
 
     Parameters
@@ -32,10 +32,10 @@ def calc_fom_hist(pred, true, weights, bins, range):
         `Rhist1D` object containing the relative energy resolution histogram.
     """
     # pylint: disable=redefined-builtin
-    fom  = (pred - true) / true
-    return RHist1D.from_data(fom, bins, weights, range)
+    resolution  = (pred - true) / true
+    return RHist1D.from_data(resolution, bins, weights, range)
 
-def calc_fom_stats(pred, true, weights, range = (-1, 1)):
+def calc_resolution_stats(pred, true, weights, range = (-1, 1)):
     """Calculate relative energy resolution statistics.
 
     Parameters
@@ -63,8 +63,8 @@ def calc_fom_stats(pred, true, weights, range = (-1, 1)):
 
     # pylint: disable=redefined-builtin
 
-    fom  = (pred - true) / true
-    mask = ((fom > range[0]) & (fom < range[1]))
+    resolution  = (pred - true) / true
+    mask = ((resolution > range[0]) & (resolution < range[1]))
 
-    return calc_all_stats(fom[mask], weights[mask])
+    return calc_all_stats(resolution[mask], weights[mask])
 
