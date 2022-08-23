@@ -3,9 +3,10 @@ Functions to make binstat plots.
 """
 
 import matplotlib.pyplot as plt
-
 from cafplot.plot import plot_nphist1d_base, save_fig
+
 from vlne.eval.binned_stats import calc_binned_stats, calc_stat
+from vlne.eval.funcs        import get_weights
 
 def plot_binstat_single(ax, x, y, weights, label, color, spec, stat):
     """Add a plot of single binstat to axes `ax`"""
@@ -22,9 +23,7 @@ def plot_binstat_single(ax, x, y, weights, label, color, spec, stat):
 
     return binstats
 
-def plot_binstat_base(
-    list_of_pred_true_weight_label_color, key, spec, stat, is_rel = False
-):
+def plot_binstat_base(plot_data_list, target, spec, stat, is_rel = False):
     """Plot binstats of relative energy resolution vs true energy."""
     spec = spec.copy()
 
@@ -35,14 +34,17 @@ def plot_binstat_base(
 
     f, ax = plt.subplots()
 
-    for pred,true,weights,label,color in list_of_pred_true_weight_label_color:
-        x = true[key]
-        y = (pred[key] - true[key])
+    for plot_data in plot_data_list:
+        x = plot_data.true[target]
+        y = (plot_data.pred[target] - plot_data.true[target])
+        w = get_weights(plot_data.weights, target, plot_data.pred)
 
         if is_rel:
             y = y / x
 
-        plot_binstat_single(ax, x, y, weights, label, color, spec, stat)
+        plot_binstat_single(
+            ax, x, y, w, plot_data.label, plot_data.color, spec, stat
+        )
 
     ax.axhline(0, 0, 1, color = 'C2', linestyle = 'dashed')
     spec.decorate(ax)
@@ -52,31 +54,15 @@ def plot_binstat_base(
     return f, ax
 
 def plot_binstats(
-    list_of_pred_true_weight_label_color,
-    plot_specs_abs, plot_specs_rel, fname, ext,
+    plot_data_list, plot_specs_abs, plot_specs_rel, fname, ext,
     stat_list = [ 'mean', 'rms' ]
 ):
     """Make and save binstat plots of energy resolution vs true energy.
 
     Parameters
     ----------
-    list_of_pred_true_weight_label_color : list
-        List of tuples of the form (pred, true, weights, label, color) where:
-        pred : dict
-            Dictionary where keys are energy labels and values are the
-            `ndarray` (shape (N,)) of predicted energies.
-        true : `ndarray`, shape (N,)
-            Dictionary where keys are energy labels and values are the
-            `ndarray` (shape (N,)) of true energies.
-        weights : `ndarray`, shape (N,)
-            Sample weights.
-        label : str
-            Plot label.
-        color : str
-            Line color.
-        A separate plot will be made for each key in the `pred`.
-        Lines for all elements of the `list_of_pred_true_weight_label_color`
-        will be drawn on each plot.
+    plot_data_list : list of PlotData
+        List of graph data.
     plot_specs_abs : dict
         Dictionary where keys are energy labels and values are `PlotSpec` that
         specify axes and bins of the absolute energy resolution plots.
@@ -94,21 +80,20 @@ def plot_binstats(
     """
     # pylint: disable=dangerous-default-value
 
-    plot_types = plot_specs_abs.keys()
+    targets = plot_specs_abs.keys()
 
-    for is_rel,spec,rel_label in zip(
+    for (is_rel, spec, rel_label) in zip(
         [ True,           False ],
         [ plot_specs_rel, plot_specs_abs ],
         [ 'rel',          'abs' ]
     ):
-        for k in plot_types:
+        for target in targets:
             for stat in stat_list:
                 f, _ = plot_binstat_base(
-                    list_of_pred_true_weight_label_color,
-                    k, spec[k], stat, is_rel
+                    plot_data_list, target, spec[target], stat, is_rel
                 )
 
-                fullname = "%s_%s_%s_%s" % (fname, k, stat, rel_label)
+                fullname = "%s_%s_%s_%s" % (fname, target, stat, rel_label)
                 save_fig(f, fullname, ext)
                 plt.close(f)
 
