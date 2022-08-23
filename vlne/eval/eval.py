@@ -8,12 +8,16 @@ import pandas as pd
 from vlne.eval.predict import (
     predict_energies,get_base_energies,get_true_energies
 )
-from vlne.eval.fom   import calc_fom_stats, calc_fom_hist
+from vlne.eval.resolution   import calc_resolution_stats, calc_resolution_hist
 from vlne.eval.gauss import fit_gaussian
+
+from .funcs import get_weights
 
 LOGGER = logging.getLogger('vlne.eval')
 
-def calc_fom_stats_hists(pred_dict, true_dict, weights, hist_specs, margin):
+def calc_resolution_stats_hists(
+    pred_dict, true_dict, weights_dict, hist_specs, margin
+):
     """
     Calculate relative energy resolution stats and hists for each energy type.
 
@@ -28,7 +32,7 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, hist_specs, margin):
         Dictionary which keys are energy labels and values are the true
         values (`ndarray`, shape (N,)) of those energies. Keys of `true_dict`
         should be the same as `pred_dict`.
-    weights : ndarray, shape (N,)
+    weights_dict : ndarray
         An array of sample weights
     hist_specs : dict
         Dictionary where keys are energy labels and values are the `PlotSpec`
@@ -48,8 +52,8 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, hist_specs, margin):
         { "ENERGY_LABEL" : { "STAT_NAME" : STAT_VALUE } }
 
         These stats in `stats_dict` are combination of the stats calculated by
-        `calc_fom_stats` and the parameters of the gaussian fit to the relative
-        energy histogram..
+        `calc_resolution_stats` and the parameters of the gaussian fit to the
+        relative energy histogram..
     rhist_dict : dict
         Dictionary where keys are the energy labels (same as in `pred_dict`)
         and values are `cafplot.RHist1D` objects that contain the histograms
@@ -57,8 +61,8 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, hist_specs, margin):
 
     See Also
     --------
-    calc_fom_stats
-    calc_fom_hist
+    calc_resolution_stats
+    calc_resolution_hist
     """
 
     stats_dict = {}
@@ -67,23 +71,26 @@ def calc_fom_stats_hists(pred_dict, true_dict, weights, hist_specs, margin):
     if pred_dict is None:
         return stats_dict, rhist_dict
 
-    for k in pred_dict.keys():
-        stats_dict[k] = calc_fom_stats(
-            pred_dict[k], true_dict[k], weights, hist_specs[k].range_x
+    for target in pred_dict.keys():
+        weights = get_weights(weights_dict, target, pred_dict)
+
+        stats_dict[target] = calc_resolution_stats(
+            pred_dict[target], true_dict[target], weights,
+            hist_specs[target].range_x
         )
 
-        rhist = calc_fom_hist(
-            pred_dict[k], true_dict[k], weights,
-            hist_specs[k].bins_x, hist_specs[k].range_x,
+        rhist = calc_resolution_hist(
+            pred_dict[target], true_dict[target], weights,
+            hist_specs[target].bins_x, hist_specs[target].range_x,
         )
-        rhist_dict[k] = rhist
+        rhist_dict[target] = rhist
 
         try:
             x = (rhist.bins_x[1:] + rhist.bins_x[:-1]) / 2
-            stats_dict[k].update(fit_gaussian(x, rhist.hist, margin))
+            stats_dict[target].update(fit_gaussian(x, rhist.hist, margin))
         except RuntimeError:
-            LOGGER.warning("Failed to fit gaussian for: %s", k)
-            stats_dict[k].update({ 'a' : 0, 'mu' : 0, 'sigma' : 0 })
+            LOGGER.warning("Failed to fit gaussian for: %s", target)
+            stats_dict[target].update({ 'a' : 0, 'mu' : 0, 'sigma' : 0 })
 
     return stats_dict, rhist_dict
 
@@ -114,19 +121,19 @@ def eval_base(dgen, pred_map, hist_specs, margin = 0.5):
         Pair of dictionaries. First is a dictionary of the energy resolution
         statistics and the second is a dictionary of energy resolution
         histograms for the baseline energies.
-        These values are returned by `calc_fom_stats_hists`.
+        These values are returned by `calc_resolution_stats_hists`.
 
     See Also
     --------
-    calc_fom_stats_hists
+    calc_resolution_stats_hists
     """
 
-    weights   = dgen.weights
-    pred_dict = get_base_energies(dgen, pred_map)
-    true_dict = get_true_energies(dgen)
+    weights_dict = dgen.weights
+    pred_dict    = get_base_energies(dgen, pred_map)
+    true_dict    = get_true_energies(dgen)
 
-    return calc_fom_stats_hists(
-        pred_dict, true_dict, weights, hist_specs, margin
+    return calc_resolution_stats_hists(
+        pred_dict, true_dict, weights_dict, hist_specs, margin
     )
 
 def eval_model(args, dgen, model, hist_specs, margin = 0.5):
@@ -156,19 +163,19 @@ def eval_model(args, dgen, model, hist_specs, margin = 0.5):
         Pair of dictionaries. First is a dictionary of the energy resolution
         statistics and the second is a dictionary of energy resolution
         histograms for the energies predicted by `model`.
-        These values are returned by `calc_fom_stats_hists`.
+        These values are returned by `calc_resolution_stats_hists`.
 
     See Also
     --------
-    calc_fom_stats_hists
+    calc_resolution_stats_hists
     """
 
-    weights   = dgen.weights
-    pred_dict = predict_energies(args, dgen, model)
-    true_dict = get_true_energies(dgen)
+    weights_dict = dgen.weights
+    pred_dict    = predict_energies(args, dgen, model)
+    true_dict    = get_true_energies(dgen)
 
-    return calc_fom_stats_hists(
-        pred_dict, true_dict, weights, hist_specs, margin
+    return calc_resolution_stats_hists(
+        pred_dict, true_dict, weights_dict, hist_specs, margin
     )
 
 def evaluate(
@@ -194,7 +201,7 @@ def evaluate(
     hist_specs : dict
         Dictionary where keys are energy labels and values are the `PlotSpec`
         objects that parametrize histograms of the relative energy resolution.
-    fom_spec : PlotSpec
+    resolution_spec : PlotSpec
         `PlotSpec` that parametrizes histogram of the relative energy
         resolution (Reco - True) / True.
     fit_margin : float
@@ -209,16 +216,16 @@ def evaluate(
         Pair of dictionaries. First is a dictionary of the energy resolution
         statistics and the second is a dictionary of energy resolution
         histograms for the energies predicted by `model`.
-        These values are returned by `calc_fom_stats_hists`.
+        These values are returned by `calc_resolution_stats_hists`.
     (stat_base_dict, rhist_base_dict) : (dict, dict)
         Pair of dictionaries. First is a dictionary of the energy resolution
         statistics and the second is a dictionary of energy resolution
         histograms for the baseline energies.
-        These values are returned by `calc_fom_stats_hists`.
+        These values are returned by `calc_resolution_stats_hists`.
 
     See Also
     --------
-    calc_fom_stats_hists
+    calc_resolution_stats_hists
     eval_model
     eval_base
     """
