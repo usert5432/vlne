@@ -17,8 +17,10 @@ import os
 
 import pandas as pd
 
+from vlndata.dataset.transform import NoiseTransform
+from vlndata.dataset           import DatasetTransform
+
 from vlne.eval.eval           import eval_model
-from vlne.data.data_generator import DataSmear
 from vlne.plot.profile        import plot_profile
 from vlne.presets             import PRESETS_EVAL
 from vlne.utils               import setup_logging
@@ -34,7 +36,7 @@ def make_hist_specs(cmdargs, preset):
 
     return {
         label : PlotSpec(**binning)
-        for (label, name) in preset.name_map.items()
+            for (label, name) in preset.name_map.items()
     }
 
 def add_energy_resolution_parser(parser):
@@ -128,41 +130,40 @@ def plot_vars_profile(
                 ext         = ext
             )
 
-def slice_var_generator(dgen, smear):
-    """Yield IDataGeneator with smeared slice level input variable"""
-    if dgen.vars_input_slice is None:
-        return None
+def scalar_perturb_generator(args, dgen, group_name, smear):
+    # pylint: disable=protected-access
+    dset = dgen.dataset
 
-    for vname in dgen.vars_input_slice:
-        dg_smear = DataSmear(
-            dgen, smear = smear, affected_vars_slice = [ vname ]
+    for vname in args.data.input_groups_scalar[group_name]:
+        smearning    = NoiseTransform(
+            { 'name' : 'gaussian', 'mu' : 0, 'sigma' : smear },
+            correlated    = False,
+            relative      = True,
+            scalar_groups = { group_name : [ vname, ] },
+            vlarr_groups  = None,
         )
 
-        yield (vname, dg_smear)
+        dgen._dgen._dataset = DatasetTransform(dset, [ smearning, ])
+        yield (vname, dgen)
 
-def png2d_var_generator(dgen, smear):
-    """Yield IDataGeneator with smeared 2D prong level input variable"""
-    if dgen.vars_input_png2d is None:
-        return None
+    dgen._dgen._dataset = dset
 
-    for vname in dgen.vars_input_png2d:
-        dg_smear = DataSmear(
-            dgen, smear = smear, affected_vars_png2d = [ vname ]
+def vlarr_perturb_generator(args, dgen, group_name, smear):
+    # pylint: disable=protected-access
+    dset = dgen.dataset
+
+    for vname in args.data.input_groups_vlarr[group_name]:
+        smearning    = NoiseTransform(
+            { 'name' : 'gaussian', 'mu' : 0, 'sigma' : smear },
+            correlated    = False,
+            relative      = True,
+            scalar_groups = None,
+            vlarr_groups  = { group_name : [ vname, ] },
         )
+        dgen._dgen._dataset = DatasetTransform(dset, [ smearning, ])
+        yield (vname, dgen)
 
-        yield (vname, dg_smear)
-
-def png3d_var_generator(dgen, smear):
-    """Yield IDataGeneator with smeared 3D prong level input variable"""
-    if dgen.vars_input_png3d is None:
-        return None
-
-    for vname in dgen.vars_input_png3d:
-        dg_smear = DataSmear(
-            dgen, smear = smear, affected_vars_png3d = [ vname ]
-        )
-
-        yield (vname, dg_smear)
+    dgen._dgen._dataset = dset
 
 def save_stats(var_list, stat_list, label, plotdir):
     """Save input importance stats vs input variable"""
@@ -212,24 +213,25 @@ def main():
     args, model, dgen, plotdir, preset = prologue(cmdargs)
 
     hist_specs = make_hist_specs(cmdargs, preset)
+    var_list   = [ 'none' ]
+    stat_list  = [ eval_model(args, dgen, model, hist_specs)[0] ]
 
-    var_list  = [ 'none' ]
-    stat_list = [ eval_model(args, dgen, model, hist_specs)[0] ]
+    scalar_groups = args.data.input_groups_scalar or []
+    vlarr_groups  = args.data.input_groups_vlarr or []
 
-    make_perturb_profile(
-        slice_var_generator(dgen, cmdargs.smear), var_list, stat_list,
-        args, model, hist_specs, preset, plotdir, 'slice', cmdargs
-    )
+    for group_name in scalar_groups:
+        make_perturb_profile(
+            scalar_perturb_generator(args, dgen, group_name, cmdargs.smear),
+            var_list, stat_list, args, model, hist_specs, preset, plotdir,
+            group_name, cmdargs
+        )
 
-    make_perturb_profile(
-        png2d_var_generator(dgen, cmdargs.smear), var_list, stat_list,
-        args, model, hist_specs, preset, plotdir, 'png2d', cmdargs
-    )
-
-    make_perturb_profile(
-        png3d_var_generator(dgen, cmdargs.smear), var_list, stat_list,
-        args, model, hist_specs, preset, plotdir, 'png3d', cmdargs
-    )
+    for group_name in vlarr_groups:
+        make_perturb_profile(
+            vlarr_perturb_generator(args, dgen, group_name, cmdargs.smear),
+            var_list, stat_list, args, model, hist_specs, preset, plotdir,
+            group_name, cmdargs
+        )
 
 if __name__ == '__main__':
     main()
