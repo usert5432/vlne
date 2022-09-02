@@ -1,12 +1,12 @@
 """Convert custom CSV file into HDF file for `vlne` training"""
 
 import argparse
-import warnings
 
+import h5py
+import tqdm
 import numpy as np
-import tables
 
-from vlne.data.data_loader import CSVLoader
+from vlndata.data_frame import CSVMemFrame
 
 def create_parser():
     """Create command line argument parser"""
@@ -39,72 +39,59 @@ class HDFExporter():
     """
 
     def __init__(self, path):
-        self._path = path
-        filters    = tables.Filters(complib = 'zlib', complevel = 5)
-        self._f    = tables.open_file(path, 'w', filters = filters)
+        self._path  = path
+        self._filters = {
+            'compression'      : 'gzip',
+            'compression_opts' : 9,
+            'fletcher32'       : True,
+        }
+        self._f = h5py.File(path, 'w')
 
-    @staticmethod
-    def extend_hdf_dset(dset, size):
-        """Extend existing HDF dataset for appending data to its end"""
-        old_size = len(dset)
-        dset.resize((old_size + size), axis = 0)
+    def _export_scalar_column(self, column, values):
+        hdf_dset = self._f.get(column)
 
-        return old_size
-
-    def _export_scalar_var(self, var, data):
-        """Save scalar data into HDF file"""
-        node_name = '/' + var
-
-        if node_name in self._f:
-            node = self._f.get_node(node_name)
-        else:
-            node = self._f.create_earray(
-                '/', var,
-                atom  = tables.Atom.from_dtype(data.dtype),
-                shape = (0,)
+        if hdf_dset is None:
+            hdf_dset = self._f.create_dataset(
+                column, data = values, maxshape = (None, ), chunks = True,
+                **self._filters
             )
-
-        node.append(data)
-
-    def _export_varr_var(self, var, data, dtype = np.float32):
-        """Save variable length array data into HDF file"""
-        # pylint: disable=unused-argument
-        node_name = '/' + var
-
-        if node_name in self._f:
-            node = self._f.get_node(node_name)
         else:
-            node = self._f.create_vlarray(
-                '/', var, atom = tables.Float32Atom(shape=())
+            hdf_dset.resize((len(hdf_dset) + len(values)), axis = 0)
+            hdf_dset[-len(values):] = values
+
+    def _export_vlarr_column(self, frame, column):
+        hdf_dset = self._f.get(column)
+        vtype    = h5py.special_dtype(vlen = frame.dtype)
+
+        n = len(frame)
+        values = []
+
+        for i in tqdm.tqdm(range(n), desc = column, total = n):
+            values.append(frame.get_vlarr(column, i))
+
+        if hdf_dset is None:
+            hdf_dset = self._f.create_dataset(
+                column, data = values, dtype = vtype, maxshape = (None, ),
+                chunks = True
             )
+        else:
+            hdf_dset.resize((len(hdf_dset) + len(values)), axis = 0)
+            hdf_dset[-len(values):][:] = values
 
-        for idx,row in enumerate(data):
-            if idx % 100 == 0:
-                print(
-                    "        %s : %d / %d" % (
-                        var, idx, len(data)
-                    ), end = '\r'
-                )
-            node.append(row)
+    def export(self, frame):
+        for column in frame.columns():
+            print(f"        {column}")
+            values = frame[column]
 
-    def export(self, loader):
-        """Save all variables from `loader` into HDF file."""
-        for var in loader.variables():
-            print("        %s" % (var), end = '\r')
-            data = loader.get(var)
-            if np.issubdtype(data.dtype, np.number):
-                self._export_scalar_var(var, data)
+            if np.issubdtype(values.dtype, np.number):
+                self._export_scalar_column(column, values)
             else:
-                self._export_varr_var(var, data)
+                self._export_vlarr_column(frame, column)
 
-    def close(self):
-        """Close output HDF file"""
+    def __del__(self):
         self._f.close()
 
 def main():
-    # pylint: disable=missing-function-docstring
-    warnings.filterwarnings('ignore', category = tables.NaturalNameWarning)
-
     parser  = create_parser()
     cmdargs = parser.parse_args()
 
@@ -113,11 +100,10 @@ def main():
     for idx,path in enumerate(cmdargs.input):
         print("Processing file %d of %d" % (idx + 1, len(cmdargs.input)))
         print("   Loading...")
-        loader = CSVLoader(path)
+        frame = CSVMemFrame(path)
         print("   Exporting...")
-        exporter.export(loader)
+        exporter.export(frame)
 
-    exporter.close()
     print("Done")
 
 if __name__ == '__main__':
