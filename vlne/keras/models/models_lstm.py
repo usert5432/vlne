@@ -272,6 +272,7 @@ def model_lstm_v2(
     n_resblocks         = None,
     reg                 = None,
     norm                = None,
+    seq_norm            = 'as_norm',
     dropout             = None,
     input_groups_scalar = None,
     input_groups_vlarr  = None,
@@ -279,6 +280,8 @@ def model_lstm_v2(
     vlarr_limits        = None,
 ):
     # pylint: disable=dangerous-default-value
+    if seq_norm == 'as_norm':
+        seq_norm = norm
 
     inputs_scalar, inputs_vlarr = get_inputs(
         input_groups_scalar, input_groups_vlarr, vlarr_limits
@@ -291,7 +294,7 @@ def model_lstm_v2(
 
         vlarr_branches[branch_name] = make_standard_lstm_branch(
             branch_name, input_layer, layers_pre, lstm_units,
-            norm, dropout, reg
+            seq_norm, dropout, reg
         )
 
     layer_merged = Concatenate()(
