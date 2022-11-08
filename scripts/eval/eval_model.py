@@ -2,6 +2,7 @@ import argparse
 import os
 
 from vlne.presets       import PRESETS_EVAL
+from vlne.train.setup   import limit_tf_memory_growth
 from vlne.utils.log     import setup_logging
 from vlne.utils.parsers import (
     add_basic_eval_args, add_concurrency_parser, add_hist_binning_parser
@@ -52,6 +53,8 @@ def parse_cmdargs():
 def main():
     setup_logging()
     cmdargs = parse_cmdargs()
+
+    limit_tf_memory_growth()
 
     dgen, args, model, outdir, plotdir, preset = \
         standard_eval_prologue(cmdargs, PRESETS_EVAL)
