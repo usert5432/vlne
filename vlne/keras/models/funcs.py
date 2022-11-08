@@ -7,9 +7,14 @@ from tensorflow.keras.layers import (
 )
 
 from vlne.consts import DEF_MASK
+from vlne.funcs  import unpack_name_args
+
 from .layer_norm import SimpleNorm
 
 def get_normalization_layer(norm, **kwargs):
+    norm, basic_kwargs = unpack_name_args(norm)
+    kwargs = { **basic_kwargs, **kwargs }
+
     if norm is None:
         return tf.identity
 
@@ -32,7 +37,7 @@ def modify_layer(layer, name, norm = None, dropout = None):
         layer = Dropout(dropout, name = name)(layer)
 
     if norm is not None:
-        name  = "%s-%snorm" % (name, norm)
+        name  = f'{name}-norm'
         layer = get_normalization_layer(norm, name = name)(layer)
 
     return layer
@@ -51,7 +56,7 @@ def modify_series_layer(
         layer = TimeDistributed(Dropout(dropout), name = name)(layer)
 
     if norm is not None:
-        name  = "%s-%snorm" % (name, norm)
+        name  = f'{name}-norm'
         layer = TimeDistributed(
             get_normalization_layer(norm), name = name
         )(layer)
