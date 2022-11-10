@@ -41,7 +41,7 @@ def get_output_by_label(pred, model, label):
 
 def predict_energies(args, dgen, model):
     kwargs = get_keras_concurrency_kwargs(args)
-    pred   = model.predict_generator(dgen, **kwargs)
+    pred   = model.predict(dgen, **kwargs)
 
     result = {
         LABEL_TOTAL     : get_output_by_label(pred, model, LABEL_TOTAL),
