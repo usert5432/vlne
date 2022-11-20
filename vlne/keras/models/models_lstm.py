@@ -472,3 +472,49 @@ def model_lstm_v3_stack(
 
     return Model(inputs = inputs, outputs = outputs)
 
+def model_lstm_v4(
+    lstm_spec           = [ (32, 'forward'), ],
+    layers_pre          = [],
+    layers_post         = [],
+    reg                 = None,
+    norm                = None,
+    seq_norm            = None,
+    dropout             = None,
+    input_groups_scalar = None,
+    input_groups_vlarr  = None,
+    target_groups       = None,
+    vlarr_limits        = None,
+):
+    # pylint: disable=dangerous-default-value
+    inputs_scalar, inputs_vlarr = get_inputs(
+        input_groups_scalar, input_groups_vlarr, vlarr_limits
+    )
+
+    vlarr_branches = {}
+
+    for (name, input_layer) in inputs_vlarr.items():
+        branch_name = f'vlarr_{name}'
+
+        vlarr_branches[branch_name] = make_stacked_lstm_branch(
+            branch_name, input_layer, layers_pre, lstm_spec,
+            seq_norm, dropout, reg
+        )
+
+    layer_merged = Concatenate()(
+        [ *inputs_scalar.values(), *vlarr_branches.values() ]
+    )
+
+    layer_merged = modify_layer(layer_merged, 'layer_merged', norm)
+    layer_post   = make_standard_postprocess_branch(
+        layer_merged, layers_post, norm, dropout, reg, n_resblocks = 0
+    )
+
+    outputs = get_outputs(target_groups, reg, layer_post)
+
+    return Model(
+        inputs  = list(
+            itertools.chain(inputs_scalar.values(), inputs_vlarr.values())
+        ),
+        outputs = list(outputs.values())
+    )
+
