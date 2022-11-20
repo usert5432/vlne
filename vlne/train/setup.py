@@ -9,7 +9,7 @@ from vlne.funcs import unpack_name_args
 from vlne.keras.callbacks import TrainTime
 from vlne.keras.models    import (
     flattened_model, model_lstm_v1, model_lstm_v2, model_lstm_v3,
-    model_slice_linear, model_lstm_v3_stack,
+    model_lstm_v4, model_slice_linear, model_lstm_v3_stack,
     model_trans_v1
 )
 
@@ -103,6 +103,8 @@ def select_model(args):
         return model_lstm_v2(**kwargs)
     if name == 'lstm_v3':
         return model_lstm_v3(**kwargs)
+    if name == 'lstm_v4':
+        return model_lstm_v4(**kwargs)
     if name == 'lstm_v3_stack':
         return model_lstm_v3_stack(**kwargs)
     if name == 'slice_linear':
