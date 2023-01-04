@@ -40,10 +40,10 @@ def add_basic_eval_args(parser, presets_eval):
     )
 
     parser.add_argument(
-        '-n', '--noise',
-        help    = 'noise configuration to use during evaluation.',
-        default = 'none',
-        dest    = 'noise',
+        '-t', '--transform',
+        help    = 'transformations to use during evaluation.',
+        default = None,
+        dest    = 'transform',
         type    = str,
     )
 
@@ -58,27 +58,11 @@ def add_basic_eval_args(parser, presets_eval):
     )
 
     parser.add_argument(
-        '-s', '--prong-sorter',
-        help     = 'prong ordering configuration.',
-        default  = None,
-        dest     = 'prong_sorter',
-        type     = str,
-    )
-
-    parser.add_argument(
-        '--seed',
-        help    =
-            'seed to initialize PRG for data split into train/test parts',
-        default = 'same',
-        dest    = 'seed',
-        type    = str,
-    )
-
-    parser.add_argument(
-        '-t', '--test-size',
-        help    = 'subset size of the dataset to use for evaluation',
-        default = 'same',
-        dest    = 'test_size',
+        '--split',
+        choices = [ 'train', 'test', 'val' ],
+        help    = 'data split to use',
+        default = 'val',
+        dest    = 'split',
         type    = str,
     )
 
@@ -101,26 +85,11 @@ def add_concurrency_parser(parser):
     )
 
     parser.add_argument(
-        '--disk-cache',
-        help    = 'use disk based cache',
-        action  = 'store_true',
-        dest    = 'disk_cache',
-    )
-
-    parser.add_argument(
         '--workers',
         help    = 'number of concurrent workers',
         dest    = 'workers',
         default = None,
         type    = int,
-    )
-
-    parser.add_argument(
-        '--concurrency',
-        help    = 'type of parallelization',
-        dest    = 'concurrency',
-        choices = [ 'thread', 'process' ],
-        default = None,
     )
 
 def add_hist_binning_parser(
@@ -164,13 +133,10 @@ def add_hist_binning_parser(
     )
 
 def parse_concurrency_cmdargs(config_dict, title = "Train"):
-    """Parse command line concurrency options into `config_dict`"""
     parser = argparse.ArgumentParser(title)
     add_concurrency_parser(parser)
 
     cmdargs = parser.parse_args()
-    config_dict['concurrency'] = cmdargs.concurrency
-    config_dict['cache']       = cmdargs.cache
-    config_dict['disk_cache']  = cmdargs.disk_cache
-    config_dict['workers']     = cmdargs.workers
+    config_dict['cache']   = cmdargs.cache
+    config_dict['workers'] = cmdargs.workers
 
