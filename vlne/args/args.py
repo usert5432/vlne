@@ -49,24 +49,6 @@ class Args:
         modified. C.f. `vars_mod_png2d` parameter.
     cache : bool, optional
         If True data batches will be cached in RAM. Default: False.
-        If `cache` is False and `concurrency` is not None, then the internal
-        `keras` concurrent data generation will be used.
-        Otherwise, data cache will be filled in parallel and keras will be
-        run without concurrent data generation.
-    disk_cache : bool, optional
-        If True data batches will be cached in on a disk. Default: False.
-        Caches are stored under "`root_outdir`/.cache" and should be
-        cleaned manually.
-    concurrency : { 'process', 'thread', None}, optional
-        Type of the parallel data batch generation to use.
-        If `concurrency` is "process" then will spawn several parallel
-        processes for the data batch generation (may eat all your RAM).
-        If "thread" then will spawn several parallel threads, mostly
-        ineffective due to GIL.
-        The number of parallel threads or processes is controlled by the
-        `workers` parameter.
-        If None then will not use parallelized data batch generation.
-        Default: None.
     workers : int or None, optional
         Number of parallel workers to spawn for the purpose of data batch
         generation. If None then no parallelization will be used.
@@ -105,8 +87,6 @@ class Args:
         'root_outdir',
 
         'cache',
-        'disk_cache',
-        'concurrency',
         'workers',
 
         'log_level',
@@ -118,8 +98,6 @@ class Args:
         root_datadir = ROOT_DATADIR,
         root_outdir  = ROOT_OUTDIR,
         cache        = False,
-        disk_cache   = False,
-        concurrency  = False,
         save_best    = True,
         workers      = None,
         log_level    = 'INFO',
@@ -130,8 +108,6 @@ class Args:
         self.root_datadir = root_datadir
         self.root_outdir  = root_outdir
         self.cache        = cache
-        self.disk_cache   = disk_cache
-        self.concurrency  = concurrency
         self.save_best    = save_best
         self.workers      = workers
         self.log_level    = log_level
@@ -182,24 +158,17 @@ class Args:
         root_datadir   = ROOT_DATADIR,
         root_outdir    = ROOT_OUTDIR,
         cache          = False,
-        disk_cache     = False,
-        concurrency    = False,
         save_best      = True,
         workers        = 0,
-        vars_mod_slice = None,
-        vars_mod_png2d = None,
-        vars_mod_png3d = None,
         log_level      = 'INFO',
-        **args_dict
+        **conf_dict
     ):
-        config  = Config(**args_dict)
-        config.modify_vars(vars_mod_slice, vars_mod_png2d, vars_mod_png3d)
-
+        config  = Config(**conf_dict)
         savedir = config.get_savedir(os.path.join(root_outdir, outdir), label)
 
         result = Args(
             config, savedir, label, root_datadir, root_outdir, cache,
-            disk_cache, concurrency, save_best, workers, log_level,
+            save_best, workers, log_level,
         )
 
         result.save()
