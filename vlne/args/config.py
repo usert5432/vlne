@@ -6,12 +6,12 @@ import hashlib
 import json
 import os
 
-from vlne.consts import DEF_SEED
-from .funcs import modify_vars
+from .config_base import ConfigBase
+from .data_config import parse_data_config
 
 CONFIG_FNAME = 'config.json'
 
-class Config:
+class Config(ConfigBase):
     # pylint: disable=too-many-instance-attributes
     """Training configuration.
 
@@ -113,120 +113,79 @@ class Config:
 
     __slots__ = (
         'batch_size',
-        'dataset',
+        'data',
         'early_stop',
         'epochs',
         'loss',
-        'max_prongs',
         'model',
-        'noise',
         'optimizer',
-        'prong_sorters',
         'regularizer',
         'schedule',
         'seed',
-        'shuffle_data',
         'steps_per_epoch',
-        'test_size',
-        'vars_input_slice',
-        'vars_input_png2d',
-        'vars_input_png3d',
-        'var_target_total',
-        'var_target_primary',
-        'weights',
     )
 
     def __init__(
         self,
         batch_size         = 32,
-        dataset            = None,
+        data               = None,
         early_stop         = None,
         epochs             = 100,
         loss               = None,
-        max_prongs         = None,
         model              = None,
-        noise              = None,
         optimizer          = None,
-        prong_sorters      = None,
         regularizer        = None,
         schedule           = None,
-        seed               = DEF_SEED,
-        shuffle_data       = True,
+        seed               = 0,
         steps_per_epoch    = None,
-        test_size          = 0.2,
+        # Deprecated options:
+        dataset            = None,
+        max_prongs         = None,
+        noise              = None,
+        prong_sorters      = None,
+        shuffle_data       = None,
+        test_size          = None,
         vars_input_slice   = None,
         vars_input_png2d   = None,
         vars_input_png3d   = None,
         var_target_total   = None,
         var_target_primary = None,
+        vars_mod_slice     = None,
+        vars_mod_png2d     = None,
+        vars_mod_png3d     = None,
         weights            = None,
     ):
-        self.batch_size         = batch_size
-        self.dataset            = dataset
-        self.early_stop         = early_stop
-        self.epochs             = epochs
-        self.loss               = loss
-        self.max_prongs         = max_prongs
-        self.model              = model
-        self.noise              = noise
-        self.optimizer          = optimizer
-        self.prong_sorters      = prong_sorters
-        self.regularizer        = regularizer
-        self.schedule           = schedule
-        self.seed               = seed
-        self.shuffle_data       = shuffle_data
-        self.steps_per_epoch    = steps_per_epoch
-        self.test_size          = test_size
-        self.vars_input_slice   = vars_input_slice
-        self.vars_input_png2d   = vars_input_png2d
-        self.vars_input_png3d   = vars_input_png3d
-        self.var_target_total   = var_target_total
-        self.var_target_primary = var_target_primary
-        self.weights            = weights
+        self.batch_size      = batch_size
+        self.early_stop      = early_stop
+        self.epochs          = epochs
+        self.loss            = loss
+        self.model           = model
+        self.optimizer       = optimizer
+        self.regularizer     = regularizer
+        self.schedule        = schedule
+        self.seed            = seed
+        self.steps_per_epoch = steps_per_epoch
 
-    def to_dict(self):
-        return { x : getattr(self, x) for x in self.__slots__ }
+        self.data = parse_data_config(
+            data, seed, dataset, max_prongs, noise, prong_sorters,
+            shuffle_data, test_size,
+            vars_input_slice, vars_input_png2d, vars_input_png3d,
+            var_target_total, var_target_primary,
+            vars_mod_slice, vars_mod_png2d, vars_mod_png3d,
+            weights
+        )
 
     def save(self, savedir):
         with open(os.path.join(savedir, CONFIG_FNAME), 'wt') as f:
-            json.dump(self.to_dict(), f, sort_keys = True, indent = 4)
+            f.write(self.to_json(sort_keys = True, indent = 4))
 
     @staticmethod
     def load(savedir):
         with open(os.path.join(savedir, CONFIG_FNAME), 'rt') as f:
-            kwargs = json.load(f)
-
-        return Config(**kwargs)
-
-    def __str__(self):
-        return json.dumps(self.to_dict(), sort_keys = True)
-
-    def pprint(self):
-        return json.dumps(self.to_dict(), sort_keys = True, indent = 4)
-
-    def modify_vars(self, vars_mod_slice, vars_mod_png2d, vars_mod_png3d):
-        """Modify input variables.
-
-        This function modifies slice, 2d and 3d prong input variables according
-        to the rules defined by the `vars_mod_slice`, `vars_mod_png2d`,
-        `vars_mod_png3d` parameters.
-        C.f. `Args` constructor for their description.
-        """
-
-        self.vars_input_slice = modify_vars(
-            self.vars_input_slice, vars_mod_slice
-        )
-
-        self.vars_input_png2d = modify_vars(
-            self.vars_input_png2d, vars_mod_png2d
-        )
-
-        self.vars_input_png3d = modify_vars(
-            self.vars_input_png3d, vars_mod_png3d
-        )
+            return Config(**json.load(f))
 
     def get_hash(self):
-        s = json.dumps(self.to_dict(), sort_keys = True)
+        s = self.to_json(sort_keys = True)
 
         md5 = hashlib.md5()
         md5.update(s.encode())
