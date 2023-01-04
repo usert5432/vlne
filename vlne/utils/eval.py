@@ -22,9 +22,8 @@ def make_eval_outdir(outdir, eval_config):
 
 def modify_concurrency_args(args, cmdargs):
     """Modify concurrency arguments of `args` from `argparse.Namespace`"""
-    args.concurrency = cmdargs.concurrency
-    args.cache       = cmdargs.cache
-    args.workers     = cmdargs.workers
+    args.cache   = cmdargs.cache
+    args.workers = cmdargs.workers
 
 def modify_specs(specs, func):
     """Map `func` over a dict of `PlotSpec`"""
