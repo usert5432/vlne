@@ -2,8 +2,8 @@
 Functions to construct models that work only on slice level inputs.
 """
 
-from tensorflow.keras.models import Model
-from .funcs import (get_inputs, get_outputs)
+# from tensorflow.keras.models import Model
+# from .funcs import (get_inputs, get_outputs)
 
 def model_slice_linear(
     reg                = None,
@@ -15,6 +15,13 @@ def model_slice_linear(
     var_target_primary = None
 ):
     """Construct linear model that uses only slice level inputs. """
+    # pylint: disable=unused-argument
+    # pylint: disable=pointless-string-statement
+    # pylint: disable=unreachable
+    raise NotImplementedError
+
+    # TODO: port to new data config
+    """
     assert(vars_input_png2d is None)
     assert(vars_input_png3d is None)
     assert(reg is None)
@@ -29,4 +36,5 @@ def model_slice_linear(
     )
 
     return Model(inputs = inputs, outputs = outputs)
+    """
 

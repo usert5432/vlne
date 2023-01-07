@@ -240,6 +240,14 @@ def model_lstm_v1(
     --------
     model_lstm_v2
     """
+    # pylint: disable=dangerous-default-value
+    # pylint: disable=unused-argument
+    # pylint: disable=pointless-string-statement
+    # pylint: disable=unreachable
+    raise NotImplementedError
+
+    # TODO: port to new data config
+    """
     assert(vars_input_png2d is None)
 
     inputs = get_inputs(vars_input_slice, vars_input_png3d, None, max_prongs)
@@ -264,6 +272,7 @@ def model_lstm_v1(
     model = Model(inputs = inputs, outputs = outputs)
 
     return model
+    """
 
 def model_lstm_v2(
     lstm_units          = 16,
@@ -440,7 +449,14 @@ def model_lstm_v3_stack(
     model_lstm_v3
     """
     # pylint: disable=dangerous-default-value
+    # pylint: disable=unused-argument
+    # pylint: disable=pointless-string-statement
+    # pylint: disable=unreachable
 
+    raise NotImplementedError
+
+    # TODO: port to new data config
+    """
     inputs = get_inputs(
         vars_input_slice, vars_input_png3d, vars_input_png2d, max_prongs
     )
@@ -471,6 +487,7 @@ def model_lstm_v3_stack(
     )
 
     return Model(inputs = inputs, outputs = outputs)
+    """
 
 def model_lstm_v4(
     lstm_spec           = [ (32, 'forward'), ],

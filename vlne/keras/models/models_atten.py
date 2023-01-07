@@ -9,9 +9,9 @@ from tensorflow.keras.layers import Dense, MultiHeadAttention, TimeDistributed
 
 from vlne.consts import DEF_MASK
 from .funcs import (
-    get_inputs, get_outputs, modify_series_layer, add_hidden_layers,
-    add_hidden_series_layers, get_normalization_layer
+    modify_series_layer, add_hidden_series_layers, get_normalization_layer
 )
+# get_inputs, get_outputs, add_hidden_layers,
 
 @tf.keras.utils.register_keras_serializable('vlne.keras.models')
 class PositionWiseFFN(tf.keras.layers.Layer):
@@ -108,7 +108,7 @@ class TransformerEncoderBlock(tf.keras.layers.Layer):
 class GlobalTransPooling(tf.keras.layers.Layer):
 
     def __init__(self, pool_type = 'sum', axis = 1, **kwargs):
-        super(GlobalTransPooling, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.supports_masking = True
         self._axis = axis
         self._type = pool_type
@@ -137,7 +137,7 @@ class GlobalTransPooling(tf.keras.layers.Layer):
         return inputs
 
     def get_config(self):
-        config = super(GlobalTransPooling, self).get_config().copy()
+        config = super().get_config().copy()
         config.update({
             'axis'      : self._axis,
             'pool_type' : self._type,
@@ -193,6 +193,14 @@ def model_trans_v1(
     var_target_primary = None,
 ):
     # pylint: disable=dangerous-default-value
+    # pylint: disable=unused-argument
+    # pylint: disable=pointless-string-statement
+    # pylint: disable=unreachable
+
+    # TODO: port to new data config
+
+    raise NotImplementedError
+    """
     assert(vars_input_png2d is None)
 
     inputs = get_inputs(
@@ -230,4 +238,6 @@ def model_trans_v1(
     )
 
     return tf.keras.Model(inputs = inputs, outputs = outputs)
+    """
+
 

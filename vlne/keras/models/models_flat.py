@@ -2,10 +2,10 @@
 Functions to construct models that work on flattened prong arrays.
 """
 
-from tensorflow.keras.layers import Concatenate, Flatten
-from tensorflow.keras.models import Model
+#from tensorflow.keras.layers import Concatenate, Flatten
+#from tensorflow.keras.models import Model
 
-from .funcs import modify_layer, add_hidden_layers, get_inputs, get_outputs
+#from .funcs import modify_layer, add_hidden_layers, get_inputs, get_outputs
 
 def flattened_model(
     max_prongs         = 5,
@@ -20,6 +20,14 @@ def flattened_model(
     var_target_primary = None
 ):
     """Construct fully connected model that flattens prong arrays"""
+    # pylint: disable=unused-argument
+    # pylint: disable=pointless-string-statement
+    # pylint: disable=unreachable
+
+    raise NotImplementedError
+
+    # TODO: port to new data config
+    """
     assert(max_prongs is not None)
     assert(vars_input_png2d is None)
 
@@ -52,5 +60,6 @@ def flattened_model(
     )
 
     return Model(inputs = inputs, outputs = outputs)
+    """
 
 
