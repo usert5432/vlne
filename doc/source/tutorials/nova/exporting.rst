@@ -1,6 +1,10 @@
 Using Trained Networks with NOvASoft
 ====================================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 So, you have trained trained your `vlne` network and hopefully satisfied
 with its performance. Next, we can try using it in the ``NOvASoft``.
 ``NOvASoft`` support using `vlne` networks at both NOvA-*art* and ``CAFAna``

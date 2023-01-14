@@ -1,6 +1,10 @@
 Using Trained Networks with dunetpc
 ===================================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 The `VLNets` package of the ``dunetpc`` has an *art* producer that is capable
 of evaluating RNN energy estimator and storing the results in the *art* files.
 However, before the network can be used with ``dunetpc`` it needs to

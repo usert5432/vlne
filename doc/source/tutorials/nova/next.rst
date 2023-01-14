@@ -1,6 +1,10 @@
 Next Steps
 ==========
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 Okay, so we have trained and evaluated MiniProd5 networks and managed to use
 them in ``NOvaSoft``. But you may wonder where to get more information about
 `vlne`. There are a couple of way you can get more info:

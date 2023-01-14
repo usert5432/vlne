@@ -1,6 +1,10 @@
 Obtaining Training/Validation Data for MiniProd5 Training
 =========================================================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 In order to obtain training and validation datasets for the `vlne`
 retraining for the MiniProd5 campaign you have two options:
 

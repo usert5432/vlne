@@ -1,6 +1,10 @@
 Training LSTM EE Networks
 =========================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 Prerequisites
 -------------
 

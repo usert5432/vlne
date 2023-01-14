@@ -1,6 +1,10 @@
 Generating Training/Validation Samples
 ======================================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 In order to begin training of the RNN energy estimator you need to get a
 training sample. Training sample can be extracted from any *art* dataset
 with the help of **VLNEnergyDataGen** ``dunetpc`` module.

@@ -1,6 +1,10 @@
 Evaluation of Trained Networks
 ==============================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 Now that you have trained your LSTM energy estimator you probably want to know
 how it performs. To assist you with this task `vlne` package comes with a
 number of scripts. Here a few of them that might be interesting:
@@ -10,10 +14,6 @@ number of scripts. Here a few of them that might be interesting:
 
 2. ``scripts/eval/make_binstat_plots.py`` -- script to plot Mean/RMS of the
    energy resolution vs true energy.
-
-3. ``scripts/eval/make_auxiliary_plots.py`` -- script to plot 2D histograms
-   of energy resolution vs true energy. And to plot the energy histograms
-   themselves.
 
 To run one of these scripts you can use the following simplified command:
 
@@ -60,9 +60,9 @@ These files are:
    for different energy types (Lepton, Hadronic, Neutrino) for a given model.
 2. ``stats_base.csv`` are the statistical properties of energy resolution
    histograms for the baseline energies (usually for the spline based EE).
-3. ``plots/fom_primary.pdf`` -- lepton energy resolution histogram plot.
-4. ``plots/fom_secondary.pdf`` -- hadronic energy resolution histogram plot.
-5. ``plots/fom_total.pdf`` -- neutrino energy resolution histogram plot.
+3. ``plots/resolution_primary.pdf`` lepton energy resolution histogram plot.
+4. ``plots/resolution_secondary.pdf`` hadronic energy resolution histogram plot.
+5. ``plots/resolution_total.pdf`` neutrino energy resolution histogram plot.
 
 
 Other Types of Evaluations

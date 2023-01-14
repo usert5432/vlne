@@ -1,6 +1,10 @@
 DUNE RNN EE Training
 ====================
 
+.. warning::
+    This tutorial is no longer maintained. It is possible that some parts
+    are no longer working.
+
 This tutorial will walk you through the RNN EE training for DUNE. It assumes
 that you know how to setup DUNE working environment. If you are not familiar
 with DUNE, please refer to the `DUNE wiki <dune_wiki_>`_ to get started.
