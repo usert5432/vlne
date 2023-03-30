@@ -40,6 +40,13 @@ def parse_cmdargs():
         help   = 'optimize graph before saving',
     )
 
+    parser.add_argument(
+        '--compat',
+        action = 'store_true',
+        dest   = 'compat',
+        help   = 'create config compatible with old vlneval versions',
+    )
+
     return parser.parse_args()
 
 def freeze_session(session, output_names):
@@ -103,20 +110,105 @@ def create_tf_config(args, model):
     config_tf = {}
 
     save_input_groups_to_config(
-        model, config_tf, args.config.data.input_groups_scalar,
-        'input_groups_scalar'
+        model, config_tf, args.config.data.input_groups_scalar, 'inputs_scalar'
     )
 
     save_input_groups_to_config(
-        model, config_tf, args.config.data.input_groups_vlarr,
-        'input_groups_vlarr'
+        model, config_tf, args.config.data.input_groups_vlarr, 'inputs_vlarr'
     )
 
-    config_tf['target_groups'] = {}
+    config_tf['targets'] = {}
 
     for (key, values) in args.config.data.target_groups.items():
-        name = get_tf_opname_for_layer(model, key, True)
-        config_tf['target_groups'][name] = len(values)
+        node = get_tf_opname_for_layer(model, key, True)
+        config_tf['targets'][key] = (node, len(values))
+
+    return config_tf
+
+def save_vars_compat(config_tf, label, var_list):
+    if var_list is None:
+        return
+
+    config_tf[label] = var_list
+
+def save_scalar_vars_compat(config_tf, scalar_groups, compat_map):
+    assert len(scalar_groups) == 1,\
+        "Compat mode support single scalar input group only"
+
+    group_name = next(iter(scalar_groups))
+
+    save_vars_compat(config_tf, 'vars_event', scalar_groups[group_name])
+    compat_map['input_event'] = group_name
+
+def save_vlarr_vars_compat(config_tf, vlarr_groups, compat_map):
+    assert (len(vlarr_groups) >= 1) and (len(vlarr_groups) <= 2),\
+        "Compat mode supports 1 or 2 vlarr input groups only"
+
+    COMPAT_PARTICLE_NODES     = set([
+        'input_pnt3d', 'input_particle', 'input_vlarr'
+    ])
+    COMPAT_PARTICLE_AUX_NODES = set([ 'input_pnt2d', 'input_particle_aux' ])
+
+    for (group_name, values) in vlarr_groups.items():
+        if group_name in COMPAT_PARTICLE_NODES:
+            save_vars_compat(config_tf, 'vars_particle', values)
+            compat_map['input_particle'] = group_name
+
+        elif group_name in COMPAT_PARTICLE_AUX_NODES:
+            save_vars_compat(config_tf, 'vars_particle_aux', values)
+            compat_map['input_particle_aux'] = group_name
+
+        else:
+            raise ValueError(
+                "Cannot find compatible interpretation of variable group"
+                f" {group_name}"
+            )
+
+def find_target_vars_compat(target_groups):
+    assert (len(target_groups) >= 1) and (len(target_groups) <= 2),\
+        "Compat mode supports 1 or 2 target groups only"
+
+    target_compat_map = {}
+
+    COMPAT_TOTAL_NODES   = set([ 'total',   'target_total' ])
+    COMPAT_PRIMARY_NODES = set([ 'primary', 'target_primary' ])
+
+    for group_name in target_groups:
+        if group_name in COMPAT_TOTAL_NODES:
+            target_compat_map['target_total'] = group_name
+
+        elif group_name in COMPAT_PRIMARY_NODES:
+            target_compat_map['target_primary'] = group_name
+
+        else:
+            print(
+                "[NOTE] Cannot find compatible interpretation of target group"
+                f" {group_name}"
+            )
+
+    return target_compat_map
+
+def create_tf_config_compat(args, model):
+    config_tf  = {}
+    compat_map = {}
+
+    scalar_groups = args.config.data.input_groups_scalar
+    vlarr_groups  = args.config.data.input_groups_vlarr
+
+    save_scalar_vars_compat(config_tf, scalar_groups, compat_map)
+    save_vlarr_vars_compat (config_tf, vlarr_groups,  compat_map)
+
+    for (key, name) in compat_map.items():
+        node = get_tf_opname_for_layer(model, name, False)
+        if node is not None:
+            config_tf[key] = node
+
+    target_compat = find_target_vars_compat(args.config.data.target_groups)
+
+    config_tf.update({
+        key : get_tf_opname_for_layer(model, name, True) \
+            for (key, name) in target_compat.items()
+    })
 
     return config_tf
 
@@ -124,8 +216,12 @@ def save_config(config_tf, outdir_tf):
     with open(os.path.join(outdir_tf, "config.json"), "wt") as f:
         json.dump(config_tf, f, indent = 4, sort_keys = True)
 
-def export(config, graph, outdir, text_also):
-    outdir = os.path.join(outdir, "tf")
+def export(config, graph, outdir, text_also, compat):
+    if compat:
+        outdir = os.path.join(outdir, "tf_compat")
+    else:
+        outdir = os.path.join(outdir, "tf")
+
     os.makedirs(outdir, exist_ok = True)
 
     save_config(config, outdir)
@@ -135,7 +231,11 @@ def main():
     cmdargs = parse_cmdargs()
 
     args, model = load_model(cmdargs.outdir, compile = False)
-    config_tf   = create_tf_config(args, model)
+
+    if cmdargs.compat:
+        config_tf = create_tf_config_compat(args, model)
+    else:
+        config_tf = create_tf_config(args, model)
 
     inputs  = [ node.op.name for node in model.inputs ]
     outputs = [ node.op.name for node in model.outputs ]
@@ -145,7 +245,7 @@ def main():
     if cmdargs.optimize:
         graph = get_optimized_graph(graph, inputs, outputs)
 
-    export(config_tf, graph, cmdargs.outdir, cmdargs.text_also)
+    export(config_tf, graph, cmdargs.outdir, cmdargs.text_also, cmdargs.compat)
 
 if __name__ == '__main__':
     main()
