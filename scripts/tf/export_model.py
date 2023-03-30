@@ -90,37 +90,33 @@ def get_tf_opname_for_layer(model, layer_name, output_op = False):
     else:
         return layer.input.op.name
 
-def set_vars(config_tf, label, var_list):
-    if var_list is None:
-        return
+def save_input_groups_to_config(model, config_tf, input_groups, label):
+    config_tf[label] = {}
 
-    config_tf[label] = var_list
+    for (key, values) in input_groups.items():
+        node = get_tf_opname_for_layer(model, key, False)
+
+        if node is not None:
+            config_tf[label][node] = values
 
 def create_tf_config(args, model):
-    """
-    Create evaluation configuration that holds input variables and graph nodes
-    """
     config_tf = {}
 
-    set_vars(config_tf, 'vars_event',        args.vars_input_slice)
-    set_vars(config_tf, 'vars_particle',     args.vars_input_png3d)
-    set_vars(config_tf, 'vars_particle_aux', args.vars_input_png2d)
+    save_input_groups_to_config(
+        model, config_tf, args.config.data.input_groups_scalar,
+        'input_groups_scalar'
+    )
 
-    INPUTS = [
-        ('input_event',        'input_slice'),
-        ('input_particle',     'input_png3d'),
-        ('input_particle_aux', 'input_png2d'),
-    ]
+    save_input_groups_to_config(
+        model, config_tf, args.config.data.input_groups_vlarr,
+        'input_groups_vlarr'
+    )
 
-    for (key, name) in INPUTS:
-        node = get_tf_opname_for_layer(model, name, False)
-        if node is not None:
-            config_tf[key] = node
+    config_tf['target_groups'] = {}
 
-    config_tf.update({
-        x : get_tf_opname_for_layer(model, x, True) \
-            for x in [ 'target_primary', 'target_total' ]
-    })
+    for (key, values) in args.config.data.target_groups.items():
+        name = get_tf_opname_for_layer(model, key, True)
+        config_tf['target_groups'][name] = len(values)
 
     return config_tf
 
