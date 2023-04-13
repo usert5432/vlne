@@ -4,10 +4,11 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from cafplot.plot          import save_fig
+from cafplot.plot       import save_fig
+
 from vlne.consts        import LABEL_TOTAL, LABEL_PRIMARY
 from vlne.data          import load_data
-from vlne.eval.predict  import predict_energies
+from vlne.eval.predict  import predict_energies, get_true_energies
 from vlne.utils.eval    import modify_concurrency_args
 from vlne.utils.io      import load_model
 from vlne.utils.log     import setup_logging
@@ -84,25 +85,33 @@ def make_comparison_plot(test_preds, null_preds, label):
     return f
 
 def main():
-    setup_logging()
+    setup_logging(level = 'INFO')
     cmdargs = parse_cmdargs()
 
     args, model = load_model(cmdargs.outdir, compile = False)
     modify_concurrency_args(args, cmdargs)
 
     args.root_datadir     = ''
-    args.config.dataset   = cmdargs.data
-    args.config.test_size = None
-    args.config.weights   = None
+    args.config.data.frame['path'] = cmdargs.data
+    args.config.data.test_size     = 1.0
+    args.config.data.val_size      = 0.0
+    args.config.data.weights       = None
 
-    args.config.var_target_primary = cmdargs.file_preds[0]
-    args.config.var_target_total   = cmdargs.file_preds[1]
+    if args.config.data.extra_vars is not None:
+        args.config.data.extra_vars.pop('flat_weight', None)
 
-    dgen            = load_data(args)[0]
-    test_preds_dict = predict_energies(args, dgen, model)
+    args.config.data.target_groups = {
+        'primary' : [ cmdargs.file_preds[0], ],
+        'total'   : [ cmdargs.file_preds[1], ],
+    }
 
-    for idx,label in enumerate(LABELS):
-        null_preds = dgen.data_loader.get(cmdargs.file_preds[idx])
+    dgen = load_data(args, splits = 'test')[0]
+
+    test_preds_dict  = predict_energies(args, dgen, model)
+    null_energy_dict = get_true_energies(dgen)
+
+    for idx, label in enumerate(LABELS):
+        null_preds = null_energy_dict[label]
         test_preds = test_preds_dict[label]
 
         f = make_comparison_plot(test_preds, null_preds, label)
